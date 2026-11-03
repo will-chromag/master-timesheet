@@ -1,10 +1,14 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Chromag Bikes Timesheet</title>
+  
+  <!-- Favicon and Web App Icons -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M22%2012C22%2017.5228%2017.5228%2022%2012%2022C6.47715%2022%202%2017.5228%202%2012%202C17.5228%202%2022%206.47715%2022%2012Z%22%20fill%3D%22%231C274C%22/%3E%3Cpath%20fill-rule%3D%22evenodd%22%20clip-rule%3D%22evenodd%22%20d%3D%22M12%207.25C12.4142%207.25%2012.75%207.58579%2012.75%208V11.6893L15.0303%2013.9697C15.3232%2014.2626%2015.3232%2014.7374%2015.0303%2015.0303C14.7374%2015.3232%2014.2626%2015.3232%2013.9697%2015.0303L11.4697%2012.5303C11.329%2012.3897%2011.25%2012.1989%2011.25%2012V8C11.25%207.58579%2011.5858%207.25%2012%207.25Z%22%20fill%3D%22white%22/%3E%3C/svg%3E">
+  <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M22%2012C22%2017.5228%2017.5228%2022%2012%2022C6.47715%2022%202%2017.5228%202%2012%202C17.5228%202%2022%206.47715%2022%2012Z%22%20fill%3D%22%231C274C%22/%3E%3Cpath%20fill-rule%3D%22evenodd%22%20clip-rule%3D%22evenodd%22%20d%3D%22M12%207.25C12.4142%207.25%2012.75%207.58579%2012.75%208V11.6893L15.0303%2013.9697C15.3232%2014.2626%2015.3232%2014.7374%2015.0303%2015.0303C14.7374%2015.3232%2014.2626%2015.3232%2013.9697%2015.0303L11.4697%2012.5303C11.329%2012.3897%2011.25%2012.1989%2011.25%2012V8C11.25%207.58579%2011.5858%207.25%2012%207.25Z%22%20fill%3D%22white%22/%3E%3C/svg%3E">
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
@@ -15,7 +19,7 @@
       --card-border: #334155;
       --text: #f8fafc;
       --text-muted: #94a3b8;
-      --accent: #f59e0b; /* Chromag warm gold/amber */
+      --accent: #f59e0b;
       --accent-hover: #d97706;
       --primary: #38bdf8;
       --success: #10b981;
@@ -33,18 +37,20 @@
     header {
       background: #111827;
       border-bottom: 1px solid #1f2937;
-      padding: 14px 18px;
+      padding: 12px 18px;
       position: sticky;
       top: 0;
       z-index: 50;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      gap: 12px;
     }
     .brand {
       display: flex;
       align-items: center;
       gap: 10px;
+      flex-shrink: 0;
     }
     .brand-title {
       font-weight: 800;
@@ -68,20 +74,21 @@
       gap: 8px;
       background: #1e293b;
       border: 1px solid var(--card-border);
-      padding: 6px 12px;
+      padding: 6px 14px;
       border-radius: 20px;
       cursor: pointer;
+      min-width: 0;
+      flex-shrink: 1;
     }
     .user-pill span {
-      font-size: 0.85rem;
+      font-size: 0.88rem;
       font-weight: 600;
       color: var(--text);
-      max-width: 120px;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
-    .user-pill svg { width: 14px; height: 14px; stroke: var(--text-muted); }
+    .user-pill svg { width: 15px; height: 15px; stroke: var(--text-muted); flex-shrink: 0; }
 
     .sync-bar {
       background: #182234;
@@ -100,12 +107,11 @@
     @keyframes pulse { 0% { opacity: 0.4; } 50% { opacity: 1; } 100% { opacity: 0.4; } }
 
     .container {
-      max-width: 680px;
+      max-width: 720px;
       margin: 0 auto;
       padding: 16px;
     }
 
-    /* Pay Period Navigator */
     .period-card {
       background: var(--card-bg);
       border: 1px solid var(--card-border);
@@ -142,7 +148,6 @@
       text-align: center;
     }
 
-    /* Total Stats */
     .stats-grid {
       display: grid;
       grid-template-columns: 1fr 1fr 1.2fr;
@@ -156,7 +161,6 @@
     .stat-val { font-family: 'JetBrains Mono', monospace; font-size: 1.25rem; font-weight: 700; color: #fff; margin-top: 2px; }
     .stat-val.highlight { color: var(--accent); }
 
-    /* Week Sections */
     .week-header {
       font-size: 0.85rem;
       font-weight: 700;
@@ -168,7 +172,6 @@
       justify-content: space-between;
     }
 
-    /* Day Card */
     .day-card {
       background: var(--card-bg);
       border: 1px solid var(--card-border);
@@ -203,11 +206,39 @@
       font-size: 0.95rem;
       color: var(--primary);
     }
-    .day-inputs {
-      display: grid;
-      grid-template-columns: 1fr 1fr 0.8fr;
-      gap: 8px;
+
+    .quick-clock-row {
+      display: flex;
+      gap: 6px;
       margin-bottom: 10px;
+    }
+    .quick-btn {
+      flex: 1;
+      background: #253347;
+      border: 1px solid #3b4d66;
+      color: #cbd5e1;
+      padding: 6px;
+      border-radius: 6px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .quick-btn:hover { background: #2f4059; color: #fff; }
+
+    .day-row-inputs {
+      display: grid;
+      grid-template-columns: 110px 110px 1fr;
+      gap: 8px;
+      align-items: flex-end;
+    }
+    @media (max-width: 480px) {
+      .day-row-inputs {
+        grid-template-columns: 1fr 1fr;
+      }
+      .notes-col {
+        grid-column: span 2;
+        margin-top: 4px;
+      }
     }
     .input-group label {
       display: block;
@@ -227,23 +258,6 @@
       font-size: 0.88rem;
       font-family: inherit;
     }
-    .quick-clock-row {
-      display: flex;
-      gap: 6px;
-      margin-bottom: 10px;
-    }
-    .quick-btn {
-      flex: 1;
-      background: #253347;
-      border: 1px solid #3b4d66;
-      color: #cbd5e1;
-      padding: 6px;
-      border-radius: 6px;
-      font-size: 0.72rem;
-      font-weight: 600;
-      cursor: pointer;
-    }
-    .quick-btn:hover { background: #2f4059; color: #fff; }
     .notes-input {
       width: 100%;
       background: #0f172a;
@@ -251,13 +265,11 @@
       border-radius: 6px;
       color: #fff;
       padding: 8px 10px;
-      font-size: 0.85rem;
+      font-size: 0.88rem;
       font-family: inherit;
-      resize: vertical;
-      min-height: 38px;
+      height: 38px;
     }
 
-    /* Modal */
     .modal-backdrop {
       position: fixed;
       inset: 0;
@@ -320,7 +332,6 @@
 </head>
 <body>
 
-  <!-- Top App Bar -->
   <header>
     <div class="brand">
       <div class="brand-title">CHROMAG</div>
@@ -334,7 +345,6 @@
     </div>
   </header>
 
-  <!-- Auto-save Sync Status Bar -->
   <div class="sync-bar">
     <div class="sync-status">
       <div class="dot" id="syncDot"></div>
@@ -344,7 +354,6 @@
   </div>
 
   <div class="container">
-    <!-- Pay Period Header Card -->
     <div class="period-card">
       <div class="nav-row">
         <button class="nav-btn" onclick="changePeriod(-1)">&larr;</button>
@@ -371,11 +380,9 @@
       </div>
     </div>
 
-    <!-- 14 Days List -->
     <div id="daysList"></div>
   </div>
 
-  <!-- Name Picker Modal -->
   <div class="modal-backdrop hidden" id="pickerModal">
     <div class="modal-content">
       <div class="modal-header">
@@ -388,13 +395,8 @@
   </div>
 
   <script>
-    // -------------------------------------------------------------
-    // CONFIGURATION
-    // -------------------------------------------------------------
-    // Put your Google Apps Script Web App URL here
-    let SCRIPT_URL = localStorage.getItem("chromag_script_url") || "https://script.google.com/macros/s/AKfycbzC4MUbgItHnLffi9Zh_Z1G8hbNGdYOpArgUylPkY5ALFs-NFweKwDUC3bk1lCGyKXH/exec";
+    let SCRIPT_URL = localStorage.getItem("chromag_script_url") || "https://script.google.com/macros/s/AKfycbyNnFwO7HJghaxHanimYNxeZgn91naM1Mj57xKUfmmd3lEmkY7a2OaI70O9b83bmCTP/exec";
 
-    // Team Members List (Edit with actual Chromag staff names)
     const STAFF_MEMBERS = [
       "Claire Buchar",
       "Dave Thoss",
@@ -415,18 +417,13 @@
       "William Westwood"
     ].sort();
 
-    // Anchor period: Monday, Nov 2, 2026
-    const ANCHOR_DATE = new Date(2026, 10, 2); // Month is 0-indexed (10 = Nov)
-    let periodOffset = 0; // 0 = current/anchor period
+    const ANCHOR_DATE = new Date(2026, 10, 2);
+    let periodOffset = 0;
 
     let currentUser = localStorage.getItem("chromag_user") || "";
     let syncTimer = null;
 
-    // -------------------------------------------------------------
-    // INITIALIZATION
-    // -------------------------------------------------------------
     window.addEventListener("DOMContentLoaded", () => {
-      // Check query param (?user=Name)
       const params = new URLSearchParams(window.location.search);
       if (params.get("user")) {
         currentUser = params.get("user");
@@ -442,9 +439,6 @@
       renderPeriod();
     });
 
-    // -------------------------------------------------------------
-    // PAY PERIOD & DATES
-    // -------------------------------------------------------------
     function getPeriodRange(offset) {
       const start = new Date(ANCHOR_DATE);
       start.setDate(start.getDate() + (offset * 14));
@@ -493,7 +487,6 @@
           container.appendChild(createWeekDivider("Week 2 (Days 8–14)"));
         }
 
-        // Get saved data from localStorage
         const saved = getStoredDay(iso);
 
         const card = document.createElement("div");
@@ -517,7 +510,7 @@
             <button type="button" class="quick-btn" onclick="clearDay('${iso}')">Clear</button>
           </div>
 
-          <div class="day-inputs">
+          <div class="day-row-inputs">
             <div class="input-group">
               <label>Start</label>
               <input type="time" id="start_${iso}" value="${saved.startTime || ''}" onchange="onDayChange('${iso}')">
@@ -526,13 +519,11 @@
               <label>End</label>
               <input type="time" id="end_${iso}" value="${saved.endTime || ''}" onchange="onDayChange('${iso}')">
             </div>
-            <div class="input-group">
-              <label>Break (m)</label>
-              <input type="number" id="break_${iso}" value="${saved.breakMinutes !== undefined ? saved.breakMinutes : 30}" min="0" step="5" onchange="onDayChange('${iso}')">
+            <div class="input-group notes-col">
+              <label>Notes & Tasks</label>
+              <input type="text" class="notes-input" id="notes_${iso}" placeholder="Add tasks or notes..." value="${saved.notes || ''}" oninput="onDayChange('${iso}')">
             </div>
           </div>
-
-          <textarea class="notes-input" id="notes_${iso}" placeholder="Notes on tasks, projects, or off-day..." oninput="onDayChange('${iso}')">${saved.notes || ''}</textarea>
         `;
 
         container.appendChild(card);
@@ -548,10 +539,7 @@
       return div;
     }
 
-    // -------------------------------------------------------------
-    // CALCULATIONS & STORAGE
-    // -------------------------------------------------------------
-    function calcDayHours(startVal, endVal, breakMins) {
+    function calcDayHours(startVal, endVal) {
       if (!startVal || !endVal) return 0;
       const [sh, sm] = startVal.split(":").map(Number);
       const [eh, em] = endVal.split(":").map(Number);
@@ -560,10 +548,10 @@
       let endMinutes = eh * 60 + em;
       
       if (endMinutes < startMinutes) {
-        endMinutes += 24 * 60; // Crosses midnight
+        endMinutes += 24 * 60;
       }
       
-      let worked = endMinutes - startMinutes - (Number(breakMins) || 0);
+      let worked = endMinutes - startMinutes;
       if (worked < 0) worked = 0;
       return Math.round((worked / 60) * 100) / 100;
     }
@@ -581,17 +569,16 @@
     function onDayChange(iso) {
       const start = document.getElementById(`start_${iso}`).value;
       const end = document.getElementById(`end_${iso}`).value;
-      const breakMins = document.getElementById(`break_${iso}`).value;
       const notes = document.getElementById(`notes_${iso}`).value;
 
-      const totalHours = calcDayHours(start, end, breakMins);
+      const totalHours = calcDayHours(start, end);
       document.getElementById(`badge_${iso}`).textContent = totalHours > 0 ? totalHours.toFixed(1) + 'h' : '0.0h';
 
       const entry = {
         dateStr: iso,
         startTime: start,
         endTime: end,
-        breakMinutes: Number(breakMins) || 0,
+        breakMinutes: 0,
         totalHours: totalHours,
         notes: notes
       };
@@ -643,9 +630,6 @@
       document.getElementById("periodTotal").textContent = (w1 + w2).toFixed(1) + 'h';
     }
 
-    // -------------------------------------------------------------
-    // GOOGLE SHEETS AUTO-SYNC
-    // -------------------------------------------------------------
     function triggerAutoSync(entry) {
       if (!currentUser) return;
       if (!SCRIPT_URL || SCRIPT_URL.includes("PASTE_YOUR")) {
@@ -686,9 +670,6 @@
       if (state === "error") dot.classList.add("error");
     }
 
-    // -------------------------------------------------------------
-    // NAME PICKER MODAL
-    // -------------------------------------------------------------
     function openPicker() {
       document.getElementById("pickerModal").classList.remove("hidden");
       renderStaffOptions(STAFF_MEMBERS);
