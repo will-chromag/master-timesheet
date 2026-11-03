@@ -226,7 +226,7 @@
     }
     .quick-btn:hover { background: #2f4059; color: #fff; }
 
-    /* Guaranteed Single Line: Start, End, Notes across mobile and desktop */
+    /* Single Line Row: Start, End, Notes across mobile and desktop */
     .day-row-inputs {
       display: flex;
       gap: 8px;
@@ -267,7 +267,6 @@
       text-align: center;
       padding: 8px 4px;
     }
-    /* Hide native time picker indicator padding if cramped */
     input[type="time"]::-webkit-calendar-picker-indicator {
       background: none;
       display: none;
@@ -339,6 +338,7 @@
 </head>
 <body>
 
+  <!-- Top App Bar -->
   <header>
     <div class="brand">
       <div class="brand-title">CHROMAG</div>
@@ -352,6 +352,7 @@
     </div>
   </header>
 
+  <!-- Auto-save Sync Status Bar -->
   <div class="sync-bar">
     <div class="sync-status">
       <div class="dot" id="syncDot"></div>
@@ -361,6 +362,7 @@
   </div>
 
   <div class="container">
+    <!-- Pay Period Header Card -->
     <div class="period-card">
       <div class="nav-row">
         <button class="nav-btn" onclick="changePeriod(-1)">&larr;</button>
@@ -387,9 +389,11 @@
       </div>
     </div>
 
+    <!-- 14 Days List -->
     <div id="daysList"></div>
   </div>
 
+  <!-- Name Picker Modal -->
   <div class="modal-backdrop hidden" id="pickerModal">
     <div class="modal-content">
       <div class="modal-header">
@@ -402,9 +406,12 @@
   </div>
 
   <script>
+    // -------------------------------------------------------------
+    // CONFIGURATION
+    // -------------------------------------------------------------
     const PRIMARY_URL = "https://script.google.com/macros/s/AKfycbzC4MUbgItHnLffi9Zh_Z1G8hbNGdYOpArgUylPkY5ALFs-NFweKwDUC3bk1lCGyKXH/exec";
     
-    // Purge outdated cached URLs
+    // Auto-update to new deployment if old one is cached
     if (localStorage.getItem("chromag_script_url") && (
         localStorage.getItem("chromag_script_url").includes("AKfycbyNnFwO7HJghaxHanim") ||
         localStorage.getItem("chromag_script_url").includes("PASTE_YOUR")
@@ -434,12 +441,16 @@
       "William Westwood"
     ].sort();
 
-    const ANCHOR_DATE = new Date(2026, 10, 2);
+    // Anchor period: Monday, Nov 2, 2026
+    const ANCHOR_DATE = new Date(2026, 10, 2); // Month is 0-indexed (10 = Nov)
     let periodOffset = 0;
 
     let currentUser = localStorage.getItem("chromag_user") || "";
     let syncTimer = null;
 
+    // -------------------------------------------------------------
+    // INITIALIZATION
+    // -------------------------------------------------------------
     window.addEventListener("DOMContentLoaded", () => {
       const params = new URLSearchParams(window.location.search);
       if (params.get("user")) {
@@ -451,11 +462,41 @@
         openPicker();
       } else {
         document.getElementById("activeUser").textContent = currentUser;
+        loadUserDataFromSheet();
       }
 
       renderPeriod();
     });
 
+    // -------------------------------------------------------------
+    // CROSS-DEVICE DATA SYNC (Sheet -> App)
+    // -------------------------------------------------------------
+    async function loadUserDataFromSheet() {
+      if (!currentUser || !SCRIPT_URL || SCRIPT_URL.includes("PASTE_YOUR")) return;
+
+      setSyncStatus("Loading your saved hours...", "saving");
+
+      try {
+        const res = await fetch(`${SCRIPT_URL}?staffName=${encodeURIComponent(currentUser)}`);
+        const data = await res.json();
+
+        if (data.status === "success" && data.entries && data.entries.length > 0) {
+          data.entries.forEach(entry => {
+            localStorage.setItem(storageKey(entry.dateStr), JSON.stringify(entry));
+          });
+          renderPeriod();
+          setSyncStatus(`Synced with sheet ✓`, "normal");
+        } else {
+          setSyncStatus(`Connected`, "normal");
+        }
+      } catch (err) {
+        setSyncStatus(`Offline mode (local data)`, "normal");
+      }
+    }
+
+    // -------------------------------------------------------------
+    // PAY PERIOD & DATES
+    // -------------------------------------------------------------
     function getPeriodRange(offset) {
       const start = new Date(ANCHOR_DATE);
       start.setDate(start.getDate() + (offset * 14));
@@ -556,6 +597,9 @@
       return div;
     }
 
+    // -------------------------------------------------------------
+    // CALCULATIONS & STORAGE
+    // -------------------------------------------------------------
     function calcDayHours(startVal, endVal) {
       if (!startVal || !endVal) return 0;
       const [sh, sm] = startVal.split(":").map(Number);
@@ -647,6 +691,9 @@
       document.getElementById("periodTotal").textContent = (w1 + w2).toFixed(1) + 'h';
     }
 
+    // -------------------------------------------------------------
+    // GOOGLE SHEETS AUTO-SYNC (App -> Sheet)
+    // -------------------------------------------------------------
     function triggerAutoSync(entry) {
       if (!currentUser) return;
       if (!SCRIPT_URL || SCRIPT_URL.includes("PASTE_YOUR")) {
@@ -687,6 +734,9 @@
       if (state === "error") dot.classList.add("error");
     }
 
+    // -------------------------------------------------------------
+    // NAME PICKER MODAL
+    // -------------------------------------------------------------
     function openPicker() {
       document.getElementById("pickerModal").classList.remove("hidden");
       renderStaffOptions(STAFF_MEMBERS);
@@ -715,6 +765,7 @@
       document.getElementById("activeUser").textContent = name;
       document.getElementById("pickerModal").classList.add("hidden");
       renderPeriod();
+      loadUserDataFromSheet();
     }
 
     function editScriptUrl() {
