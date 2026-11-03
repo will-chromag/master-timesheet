@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Chromag Bikes Timesheet</title>
   
-  <!-- Favicon and Web App Icons -->
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M22%2012C22%2017.5228%2017.5228%2022%2012%2022C6.47715%2022%202%2017.5228%202%2012%202C17.5228%202%2022%206.47715%2022%2012Z%22%20fill%3D%22%231C274C%22/%3E%3Cpath%20fill-rule%3D%22evenodd%22%20clip-rule%3D%22evenodd%22%20d%3D%22M12%207.25C12.4142%207.25%2012.75%207.58579%2012.75%208V11.6893L15.0303%2013.9697C15.3232%2014.2626%2015.3232%2014.7374%2015.0303%2015.0303C14.7374%2015.3232%2014.2626%2015.3232%2013.9697%2015.0303L11.4697%2012.5303C11.329%2012.3897%2011.25%2012.1989%2011.25%2012V8C11.25%207.58579%2011.5858%207.25%2012%207.25Z%22%20fill%3D%22white%22/%3E%3C/svg%3E">
-  <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M22%2012C22%2017.5228%2017.5228%2022%2012%2022C6.47715%2022%202%2017.5228%202%2012%202C17.5228%202%2022%206.47715%2022%2012Z%22%20fill%3D%22%231C274C%22/%3E%3Cpath%20fill-rule%3D%22evenodd%22%20clip-rule%3D%22evenodd%22%20d%3D%22M12%207.25C12.4142%207.25%2012.75%207.58579%2012.75%208V11.6893L15.0303%2013.9697C15.3232%2014.2626%2015.3232%2014.7374%2015.0303%2015.0303C14.7374%2015.3232%2014.2626%2015.3232%2013.9697%2015.0303L11.4697%2012.5303C11.329%2012.3897%2011.25%2012.1989%2011.25%2012V8C11.25%207.58579%2011.5858%207.25%2012%207.25Z%22%20fill%3D%22white%22/%3E%3C/svg%3E">
+  <!-- Flawless Solid Round SVG Clock Favicon and Touch Icon -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgd2lkdGg9IjgwMCIgaGVpZ2h0PSI4MDAiPgogIDxjaXJjbGUgY3g9IjEyIiBjeT0iMTIiIHI9IjEwIiBmaWxsPSIjMUMyNzRDIiAvPgogIDxwYXRoIGZpbGwtcnVsZT0iZXZlbm9kZCIgY2xpcC1ydWxlPSJldmVub2RkIiBkPSJNMTIgNy4yNUMxMi40MTQyIDcuMjUgMTIuNzUgNy41ODU3OSAxMi43NSA4VjExLjY4OTNMMTUuMDMwMyAxMy45Njk3QzE1LjMyMzIgMTQuMjYyNiAxNS4zMjMyIDE0LjczNzQgMTUuMDMwMyAxNS4wMzAzQzE0LjczNzQgMTUuMzIzMiAxNC4yNjI2IDE1LjMyMzIgMTMuOTY5NyAxNS4wMzAzTDExLjQ2OTcgMTIuNTMwM0MxMS4zMjkgMTIuMzg5NyAxMS4yNSAxMi4xOTg5IDExLjI1IDEyVjhDMTEuMjUgNy41ODU3OSAxMS41ODU4IDcuMjUgMTIgNy4yNVoiIGZpbGw9IiNGRkZGRkYiLz4KPC9zdmc+">
+  <link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgd2lkdGg9IjgwMCIgaGVpZ2h0PSI4MDAiPgogIDxjaXJjbGUgY3g9IjEyIiBjeT0iMTIiIHI9IjEwIiBmaWxsPSIjMUMyNzRDIiAvPgogIDxwYXRoIGZpbGwtcnVsZT0iZXZlbm9kZCIgY2xpcC1ydWxlPSJldmVub2RkIiBkPSJNMTIgNy4yNUMxMi40MTQyIDcuMjUgMTIuNzUgNy41ODU3OSAxMi43NSA4VjExLjY4OTNMMTUuMDMwMyAxMy45Njk3QzE1LjMyMzIgMTQuMjYyNiAxNS4zMjMyIDE0LjczNzQgMTUuMDMwMyAxNS4wMzAzQzE0LjczNzQgMTUuMzIzMiAxNC4yNjI2IDE1LjMyMzIgMTMuOTY5NyAxNS4wMzAzTDExLjQ2OTcgMTIuNTMwM0MxMS4zMjkgMTIuMzg5NyAxMS4yNSAxMi4xOTg5IDExLjI1IDEyVjhDMTEuMjUgNy41ODU3OSAxMS41ODU4IDcuMjUgMTIgNy4yNVoiIGZpbGw9IiNGRkZGRkYiLz4KPC9zdmc+">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -19,7 +19,7 @@
       --card-border: #334155;
       --text: #f8fafc;
       --text-muted: #94a3b8;
-      --accent: #f59e0b;
+      --accent: #f59e0b; /* Chromag warm gold/amber */
       --accent-hover: #d97706;
       --primary: #38bdf8;
       --success: #10b981;
@@ -112,6 +112,7 @@
       padding: 16px;
     }
 
+    /* Pay Period Navigator */
     .period-card {
       background: var(--card-bg);
       border: 1px solid var(--card-border);
@@ -148,6 +149,7 @@
       text-align: center;
     }
 
+    /* Total Stats */
     .stats-grid {
       display: grid;
       grid-template-columns: 1fr 1fr 1.2fr;
@@ -161,6 +163,7 @@
     .stat-val { font-family: 'JetBrains Mono', monospace; font-size: 1.25rem; font-weight: 700; color: #fff; margin-top: 2px; }
     .stat-val.highlight { color: var(--accent); }
 
+    /* Week Sections */
     .week-header {
       font-size: 0.85rem;
       font-weight: 700;
@@ -172,6 +175,7 @@
       justify-content: space-between;
     }
 
+    /* Day Card */
     .day-card {
       background: var(--card-bg);
       border: 1px solid var(--card-border);
@@ -225,13 +229,14 @@
     }
     .quick-btn:hover { background: #2f4059; color: #fff; }
 
+    /* Single Line Row: Generous width for Start and End, Notes smaller */
     .day-row-inputs {
       display: grid;
-      grid-template-columns: 110px 110px 1fr;
+      grid-template-columns: 140px 140px 1fr;
       gap: 8px;
       align-items: flex-end;
     }
-    @media (max-width: 480px) {
+    @media (max-width: 540px) {
       .day-row-inputs {
         grid-template-columns: 1fr 1fr;
       }
@@ -255,8 +260,14 @@
       border-radius: 6px;
       color: #fff;
       padding: 8px 10px;
-      font-size: 0.88rem;
+      font-size: 0.92rem;
       font-family: inherit;
+    }
+    /* Native time inputs styling */
+    input[type="time"] {
+      min-width: 0;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.9rem;
     }
     .notes-input {
       width: 100%;
@@ -265,11 +276,12 @@
       border-radius: 6px;
       color: #fff;
       padding: 8px 10px;
-      font-size: 0.88rem;
+      font-size: 0.85rem;
       font-family: inherit;
       height: 38px;
     }
 
+    /* Modal */
     .modal-backdrop {
       position: fixed;
       inset: 0;
@@ -332,6 +344,7 @@
 </head>
 <body>
 
+  <!-- Top App Bar -->
   <header>
     <div class="brand">
       <div class="brand-title">CHROMAG</div>
@@ -345,6 +358,7 @@
     </div>
   </header>
 
+  <!-- Auto-save Sync Status Bar -->
   <div class="sync-bar">
     <div class="sync-status">
       <div class="dot" id="syncDot"></div>
@@ -354,6 +368,7 @@
   </div>
 
   <div class="container">
+    <!-- Pay Period Header Card -->
     <div class="period-card">
       <div class="nav-row">
         <button class="nav-btn" onclick="changePeriod(-1)">&larr;</button>
@@ -380,9 +395,11 @@
       </div>
     </div>
 
+    <!-- 14 Days List -->
     <div id="daysList"></div>
   </div>
 
+  <!-- Name Picker Modal -->
   <div class="modal-backdrop hidden" id="pickerModal">
     <div class="modal-content">
       <div class="modal-header">
@@ -395,7 +412,17 @@
   </div>
 
   <script>
-    let SCRIPT_URL = localStorage.getItem("chromag_script_url") || "https://script.google.com/macros/s/AKfycbyNnFwO7HJghaxHanimYNxeZgn91naM1Mj57xKUfmmd3lEmkY7a2OaI70O9b83bmCTP/exec";
+    // -------------------------------------------------------------
+    // CONFIGURATION
+    // -------------------------------------------------------------
+    const PRIMARY_URL = "https://script.google.com/macros/s/AKfycbyNnFwO7HJghaxHanimYNxeZgn91naM1Mj57xKUfmmd3lEmkY7a2OaI70O9b83bmCTP/exec";
+    
+    // Clear out any old placeholder URLs stuck in localStorage
+    if (localStorage.getItem("chromag_script_url") && localStorage.getItem("chromag_script_url").includes("PASTE_YOUR")) {
+      localStorage.removeItem("chromag_script_url");
+    }
+    
+    let SCRIPT_URL = localStorage.getItem("chromag_script_url") || PRIMARY_URL;
 
     const STAFF_MEMBERS = [
       "Claire Buchar",
@@ -417,12 +444,16 @@
       "William Westwood"
     ].sort();
 
-    const ANCHOR_DATE = new Date(2026, 10, 2);
+    // Anchor period: Monday, Nov 2, 2026
+    const ANCHOR_DATE = new Date(2026, 10, 2); // Month is 0-indexed (10 = Nov)
     let periodOffset = 0;
 
     let currentUser = localStorage.getItem("chromag_user") || "";
     let syncTimer = null;
 
+    // -------------------------------------------------------------
+    // INITIALIZATION
+    // -------------------------------------------------------------
     window.addEventListener("DOMContentLoaded", () => {
       const params = new URLSearchParams(window.location.search);
       if (params.get("user")) {
@@ -439,6 +470,9 @@
       renderPeriod();
     });
 
+    // -------------------------------------------------------------
+    // PAY PERIOD & DATES
+    // -------------------------------------------------------------
     function getPeriodRange(offset) {
       const start = new Date(ANCHOR_DATE);
       start.setDate(start.getDate() + (offset * 14));
@@ -520,8 +554,8 @@
               <input type="time" id="end_${iso}" value="${saved.endTime || ''}" onchange="onDayChange('${iso}')">
             </div>
             <div class="input-group notes-col">
-              <label>Notes & Tasks</label>
-              <input type="text" class="notes-input" id="notes_${iso}" placeholder="Add tasks or notes..." value="${saved.notes || ''}" oninput="onDayChange('${iso}')">
+              <label>Notes</label>
+              <input type="text" class="notes-input" id="notes_${iso}" placeholder="Tasks or notes..." value="${saved.notes || ''}" oninput="onDayChange('${iso}')">
             </div>
           </div>
         `;
@@ -539,6 +573,9 @@
       return div;
     }
 
+    // -------------------------------------------------------------
+    // CALCULATIONS & STORAGE
+    // -------------------------------------------------------------
     function calcDayHours(startVal, endVal) {
       if (!startVal || !endVal) return 0;
       const [sh, sm] = startVal.split(":").map(Number);
@@ -630,6 +667,9 @@
       document.getElementById("periodTotal").textContent = (w1 + w2).toFixed(1) + 'h';
     }
 
+    // -------------------------------------------------------------
+    // GOOGLE SHEETS AUTO-SYNC
+    // -------------------------------------------------------------
     function triggerAutoSync(entry) {
       if (!currentUser) return;
       if (!SCRIPT_URL || SCRIPT_URL.includes("PASTE_YOUR")) {
@@ -658,7 +698,7 @@
         } catch (e) {
           setSyncStatus("Sync failed. Check connection.", "error");
         }
-      }, 700);
+      }, 600);
     }
 
     function setSyncStatus(msg, state) {
@@ -670,6 +710,9 @@
       if (state === "error") dot.classList.add("error");
     }
 
+    // -------------------------------------------------------------
+    // NAME PICKER MODAL
+    // -------------------------------------------------------------
     function openPicker() {
       document.getElementById("pickerModal").classList.remove("hidden");
       renderStaffOptions(STAFF_MEMBERS);
