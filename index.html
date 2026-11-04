@@ -10,7 +10,7 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
   
   <style>
     :root {
@@ -299,13 +299,21 @@
       color: #fff;
       padding: 8px 10px;
       font-size: 0.88rem;
-      font-family: inherit;
       height: 38px;
     }
-    .time-input {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.88rem;
+
+    /* Native Time Input with JetBrains Mono */
+    input[type="time"] {
+      font-family: 'JetBrains Mono', monospace !important;
+      font-size: 0.85rem !important;
+      font-weight: 500;
       text-align: center;
+      padding: 8px 6px;
+      color-scheme: dark;
+    }
+    input[type="time"]::-webkit-calendar-picker-indicator {
+      background: none;
+      display: none;
     }
 
     /* Mobile: Start & End on Row 1 (50% each), Notes on Row 2 (full width) */
@@ -323,8 +331,8 @@
     /* Desktop: All 3 on single line */
     @media (min-width: 601px) {
       .time-col {
-        flex: 0 0 115px;
-        max-width: 115px;
+        flex: 0 0 130px;
+        max-width: 130px;
       }
       .notes-col {
         flex: 1 1 auto;
@@ -690,6 +698,9 @@
     let selectedUserForPin = null;
     let syncTimer = null;
 
+    // Buffer to track keystrokes on time inputs to resolve partial inputs (like "06:00")
+    const keyBuffers = {};
+
     // -------------------------------------------------------------
     // INITIALIZATION
     // -------------------------------------------------------------
@@ -975,47 +986,6 @@
       return `${year}-${month}-${day}`;
     }
 
-    // -------------------------------------------------------------
-    // SMART TIME PARSER & NORMALIZER
-    // -------------------------------------------------------------
-    function normalizeTimeInput(raw) {
-      if (!raw) return "";
-      let s = String(raw).trim().toLowerCase();
-
-      // Formats like "06:00", "6:00", "6:00am", "2:00pm", "14:00"
-      let m = s.match(/^(\d{1,2}):(\d{2})\s*(am|pm|a|p)?$/);
-      if (m) {
-        let h = parseInt(m[1], 10);
-        let mins = parseInt(m[2], 10);
-        let mer = m[3];
-
-        if ((mer === "pm" || mer === "p") && h < 12) h += 12;
-        else if ((mer === "am" || mer === "a") && h === 12) h = 0;
-        // If no AM/PM: default hours < 12 to AM, >= 12 stay 24h
-        return String(h).padStart(2, "0") + ":" + String(mins).padStart(2, "0");
-      }
-
-      // Shorthand integers like "8", "14", "8am", "2pm", "8a", "2p"
-      let m2 = s.match(/^(\d{1,2})\s*(am|pm|a|p)?$/);
-      if (m2) {
-        let h = parseInt(m2[1], 10);
-        let mer = m2[2];
-        if ((mer === "pm" || mer === "p") && h < 12) h += 12;
-        else if ((mer === "am" || mer === "a") && h === 12) h = 0;
-        return String(h).padStart(2, "0") + ":00";
-      }
-
-      // Continuous digits like "0830", "1430", "600"
-      let m3 = s.match(/^(\d{1,2})(\d{2})$/);
-      if (m3) {
-        let h = parseInt(m3[1], 10);
-        let mins = parseInt(m3[2], 10);
-        return String(h).padStart(2, "0") + ":" + String(mins).padStart(2, "0");
-      }
-
-      return s;
-    }
-
     function renderPeriod() {
       const { start, end } = getPeriodRange(periodOffset);
       document.getElementById("periodDates").textContent = 
@@ -1074,11 +1044,11 @@
           <div class="day-row-inputs">
             <div class="input-group time-col">
               <label>Start</label>
-              <input type="text" class="time-input" id="start_${iso}" placeholder="08:00" value="${saved.startTime || ''}" onblur="onTimeBlur('${iso}', 'start')" onchange="onDayChange('${iso}')">
+              <input type="time" id="start_${iso}" value="${saved.startTime || ''}" onkeydown="trackTimeKey(event, '${iso}', 'start')" onblur="handleTimeBlur('${iso}', 'start')" onchange="onDayChange('${iso}')">
             </div>
             <div class="input-group time-col">
               <label>End</label>
-              <input type="text" class="time-input" id="end_${iso}" placeholder="16:30" value="${saved.endTime || ''}" onblur="onTimeBlur('${iso}', 'end')" onchange="onDayChange('${iso}')">
+              <input type="time" id="end_${iso}" value="${saved.endTime || ''}" onkeydown="trackTimeKey(event, '${iso}', 'end')" onblur="handleTimeBlur('${iso}', 'end')" onchange="onDayChange('${iso}')">
             </div>
             <div class="input-group notes-col">
               <label>Notes</label>
@@ -1101,21 +1071,60 @@
     }
 
     // -------------------------------------------------------------
+    // KEY TRACKING & TIME RESOLUTION
+    // -------------------------------------------------------------
+    function trackTimeKey(e, iso, type) {
+      const keyId = `${iso}_${type}`;
+      if (!keyBuffers[keyId]) keyBuffers[keyId] = [];
+
+      if (/^[0-9]$/.test(e.key)) {
+        keyBuffers[keyId].push(e.key);
+        if (keyBuffers[keyId].length > 4) keyBuffers[keyId].shift();
+      } else if (e.key === "Backspace") {
+        keyBuffers[keyId].pop();
+      }
+    }
+
+    function handleTimeBlur(iso, type) {
+      const input = document.getElementById(`${type}_${iso}`);
+      if (!input) return;
+
+      // If browser DOM value is empty because AM wasn't explicitly selected
+      if (!input.value) {
+        const keyId = `${iso}_${type}`;
+        const buf = keyBuffers[keyId] || [];
+
+        if (buf.length >= 3) {
+          let h = 0, m = 0;
+          if (buf.length === 3) {
+            h = parseInt(buf[0], 10);
+            m = parseInt(buf.slice(1).join(""), 10);
+          } else if (buf.length === 4) {
+            h = parseInt(buf.slice(0, 2).join(""), 10);
+            m = parseInt(buf.slice(2).join(""), 10);
+          }
+
+          if (m < 60) {
+            // Default hours < 12 to AM (e.g. 06:00 -> 06:00)
+            if (h <= 12) {
+              const formatted = String(h).padStart(2, "0") + ":" + String(m).padStart(2, "0");
+              input.value = formatted;
+            }
+          }
+        }
+      }
+
+      delete keyBuffers[`${iso}_${type}`];
+      onDayChange(iso);
+    }
+
+    // -------------------------------------------------------------
     // CALCULATIONS & STORAGE
     // -------------------------------------------------------------
     function calcDayHours(startVal, endVal) {
       if (!startVal || !endVal) return 0;
-      const sNorm = normalizeTimeInput(startVal);
-      const eNorm = normalizeTimeInput(endVal);
-
-      const sParts = sNorm.split(":");
-      const eParts = eNorm.split(":");
-      if (sParts.length !== 2 || eParts.length !== 2) return 0;
-
-      const sh = parseInt(sParts[0], 10);
-      const sm = parseInt(sParts[1], 10);
-      const eh = parseInt(eParts[0], 10);
-      const em = parseInt(eParts[1], 10);
+      const [sh, sm] = startVal.split(":").map(Number);
+      const [eh, em] = endVal.split(":").map(Number);
       
       let startMinutes = sh * 60 + sm;
       let endMinutes = eh * 60 + em;
@@ -1135,14 +1144,6 @@
       if (!currentUser) return {};
       const raw = localStorage.getItem(storageKey(iso));
       return raw ? JSON.parse(raw) : {};
-    }
-
-    function onTimeBlur(iso, type) {
-      const input = document.getElementById(`${type}_${iso}`);
-      if (input && input.value) {
-        input.value = normalizeTimeInput(input.value);
-      }
-      onDayChange(iso);
     }
 
     function onDayChange(iso) {
@@ -1193,6 +1194,8 @@
       if (s) s.value = '';
       if (e) e.value = '';
       if (n) n.value = '';
+      delete keyBuffers[`${iso}_start`];
+      delete keyBuffers[`${iso}_end`];
       onDayChange(iso);
     }
 
@@ -1233,9 +1236,7 @@
         try {
           const payload = {
             staffName: currentUser,
-            ...entry,
-            startTime: normalizeTimeInput(entry.startTime),
-            endTime: normalizeTimeInput(entry.endTime)
+            ...entry
           };
 
           await fetch(SCRIPT_URL, {
