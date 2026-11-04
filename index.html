@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Chromag Bikes Timesheet</title>
   
-  <!-- Clean SVG Clock Favicon and Touch Icon -->
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><circle cx='12' cy='12' r='10' fill='%231C274C'/><path fill-rule='evenodd' clip-rule='evenodd' d='M12 7.25c.414 0 .75.336.75.75v3.689l2.28 2.28a.75.75 0 1 1-1.06 1.062L11.47 12.53A.749.749 0 0 1 11.25 12V8c0-.414.336-.75.75-.75z' fill='%23FFFFFF'/></svg>">
   <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><circle cx='12' cy='12' r='10' fill='%231C274C'/><path fill-rule='evenodd' clip-rule='evenodd' d='M12 7.25c.414 0 .75.336.75.75v3.689l2.28 2.28a.75.75 0 1 1-1.06 1.062L11.47 12.53A.749.749 0 0 1 11.25 12V8c0-.414.336-.75.75-.75z' fill='%23FFFFFF'/></svg>">
 
@@ -36,7 +35,6 @@
       line-height: 1.4;
     }
 
-    /* Sticky Container: keeps Header + Sync Bar + Period Card fixed at top */
     .sticky-top-section {
       position: sticky;
       top: 0;
@@ -261,7 +259,7 @@
     .quick-clock-row {
       display: flex;
       gap: 6px;
-      margin-bottom: 10px;
+      margin-bottom: 12px;
     }
     .quick-btn {
       flex: 1;
@@ -276,19 +274,13 @@
     }
     .quick-btn:hover { background: #2f4059; color: #fff; }
 
+    /* Responsive Inputs Grid */
     .day-row-inputs {
       display: flex;
-      gap: 8px;
+      gap: 10px;
+      flex-wrap: wrap;
       align-items: flex-end;
       width: 100%;
-    }
-    .time-col {
-      flex: 0 0 105px;
-      max-width: 105px;
-    }
-    .notes-col {
-      flex: 1 1 auto;
-      min-width: 0;
     }
 
     .input-group label {
@@ -305,27 +297,42 @@
       border: 1px solid var(--card-border);
       border-radius: 6px;
       color: #fff;
-      padding: 8px 6px;
-      font-size: 0.85rem;
+      padding: 8px 10px;
+      font-size: 0.88rem;
       font-family: inherit;
       height: 38px;
     }
-    input[type="time"] {
+    .time-input {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 0.82rem;
+      font-size: 0.88rem;
       text-align: center;
-      padding: 8px 4px;
-    }
-    input[type="time"]::-webkit-calendar-picker-indicator {
-      background: none;
-      display: none;
-    }
-    .notes-input {
-      font-size: 0.85rem;
-      padding: 8px 10px;
     }
 
-    /* Modal Backdrop and Containers */
+    /* Mobile: Start & End on Row 1 (50% each), Notes on Row 2 (full width) */
+    @media (max-width: 600px) {
+      .time-col {
+        flex: 1 1 calc(50% - 5px);
+        max-width: calc(50% - 5px);
+      }
+      .notes-col {
+        flex: 1 1 100%;
+        width: 100%;
+      }
+    }
+
+    /* Desktop: All 3 on single line */
+    @media (min-width: 601px) {
+      .time-col {
+        flex: 0 0 115px;
+        max-width: 115px;
+      }
+      .notes-col {
+        flex: 1 1 auto;
+        min-width: 0;
+      }
+    }
+
+    /* Modals */
     .modal-backdrop {
       position: fixed;
       inset: 0;
@@ -370,10 +377,7 @@
       border-radius: 6px;
       transition: color 0.15s ease, background 0.15s ease;
     }
-    .btn-close-modal:hover {
-      color: #fff;
-      background: #334155;
-    }
+    .btn-close-modal:hover { color: #fff; background: #334155; }
 
     .search-box {
       width: 100%;
@@ -408,7 +412,6 @@
       border-color: var(--accent);
     }
 
-    /* PIN verification styles */
     .pin-input {
       font-family: 'JetBrains Mono', monospace;
       letter-spacing: 8px;
@@ -424,7 +427,6 @@
       display: block;
     }
 
-    /* Settings UI styles */
     .settings-section-title {
       font-size: 0.75rem;
       font-weight: 700;
@@ -522,7 +524,7 @@
 </head>
 <body>
 
-  <!-- Sticky Top Wrapper: Header + Sync Bar + Pay Period Summary -->
+  <!-- Sticky Top Wrapper -->
   <div class="sticky-top-section">
     <header>
       <div class="brand">
@@ -656,7 +658,6 @@
 
     let SCRIPT_URL = localStorage.getItem("chromag_script_url") || PRIMARY_URL;
 
-    // Fallback seed staff list if offline or before first fetch
     let staffRoster = [
       { name: "Claire Buchar", pin: "1234" },
       { name: "Dave Thoss", pin: "1234" },
@@ -787,7 +788,6 @@
       }
     }
 
-    // Enter key submits PIN
     document.getElementById("userPinInput").addEventListener("keyup", (e) => {
       if (e.key === "Enter") submitUserPin();
     });
@@ -975,6 +975,47 @@
       return `${year}-${month}-${day}`;
     }
 
+    // -------------------------------------------------------------
+    // SMART TIME PARSER & NORMALIZER
+    // -------------------------------------------------------------
+    function normalizeTimeInput(raw) {
+      if (!raw) return "";
+      let s = String(raw).trim().toLowerCase();
+
+      // Formats like "06:00", "6:00", "6:00am", "2:00pm", "14:00"
+      let m = s.match(/^(\d{1,2}):(\d{2})\s*(am|pm|a|p)?$/);
+      if (m) {
+        let h = parseInt(m[1], 10);
+        let mins = parseInt(m[2], 10);
+        let mer = m[3];
+
+        if ((mer === "pm" || mer === "p") && h < 12) h += 12;
+        else if ((mer === "am" || mer === "a") && h === 12) h = 0;
+        // If no AM/PM: default hours < 12 to AM, >= 12 stay 24h
+        return String(h).padStart(2, "0") + ":" + String(mins).padStart(2, "0");
+      }
+
+      // Shorthand integers like "8", "14", "8am", "2pm", "8a", "2p"
+      let m2 = s.match(/^(\d{1,2})\s*(am|pm|a|p)?$/);
+      if (m2) {
+        let h = parseInt(m2[1], 10);
+        let mer = m2[2];
+        if ((mer === "pm" || mer === "p") && h < 12) h += 12;
+        else if ((mer === "am" || mer === "a") && h === 12) h = 0;
+        return String(h).padStart(2, "0") + ":00";
+      }
+
+      // Continuous digits like "0830", "1430", "600"
+      let m3 = s.match(/^(\d{1,2})(\d{2})$/);
+      if (m3) {
+        let h = parseInt(m3[1], 10);
+        let mins = parseInt(m3[2], 10);
+        return String(h).padStart(2, "0") + ":" + String(mins).padStart(2, "0");
+      }
+
+      return s;
+    }
+
     function renderPeriod() {
       const { start, end } = getPeriodRange(periodOffset);
       document.getElementById("periodDates").textContent = 
@@ -1033,11 +1074,11 @@
           <div class="day-row-inputs">
             <div class="input-group time-col">
               <label>Start</label>
-              <input type="time" id="start_${iso}" value="${saved.startTime || ''}" onchange="onDayChange('${iso}')">
+              <input type="text" class="time-input" id="start_${iso}" placeholder="08:00" value="${saved.startTime || ''}" onblur="onTimeBlur('${iso}', 'start')" onchange="onDayChange('${iso}')">
             </div>
             <div class="input-group time-col">
               <label>End</label>
-              <input type="time" id="end_${iso}" value="${saved.endTime || ''}" onchange="onDayChange('${iso}')">
+              <input type="text" class="time-input" id="end_${iso}" placeholder="16:30" value="${saved.endTime || ''}" onblur="onTimeBlur('${iso}', 'end')" onchange="onDayChange('${iso}')">
             </div>
             <div class="input-group notes-col">
               <label>Notes</label>
@@ -1064,8 +1105,17 @@
     // -------------------------------------------------------------
     function calcDayHours(startVal, endVal) {
       if (!startVal || !endVal) return 0;
-      const [sh, sm] = startVal.split(":").map(Number);
-      const [eh, em] = endVal.split(":").map(Number);
+      const sNorm = normalizeTimeInput(startVal);
+      const eNorm = normalizeTimeInput(endVal);
+
+      const sParts = sNorm.split(":");
+      const eParts = eNorm.split(":");
+      if (sParts.length !== 2 || eParts.length !== 2) return 0;
+
+      const sh = parseInt(sParts[0], 10);
+      const sm = parseInt(sParts[1], 10);
+      const eh = parseInt(eParts[0], 10);
+      const em = parseInt(eParts[1], 10);
       
       let startMinutes = sh * 60 + sm;
       let endMinutes = eh * 60 + em;
@@ -1087,13 +1137,28 @@
       return raw ? JSON.parse(raw) : {};
     }
 
+    function onTimeBlur(iso, type) {
+      const input = document.getElementById(`${type}_${iso}`);
+      if (input && input.value) {
+        input.value = normalizeTimeInput(input.value);
+      }
+      onDayChange(iso);
+    }
+
     function onDayChange(iso) {
-      const start = document.getElementById(`start_${iso}`).value;
-      const end = document.getElementById(`end_${iso}`).value;
-      const notes = document.getElementById(`notes_${iso}`).value;
+      const startEl = document.getElementById(`start_${iso}`);
+      const endEl = document.getElementById(`end_${iso}`);
+      const notesEl = document.getElementById(`notes_${iso}`);
+
+      const start = startEl ? startEl.value : "";
+      const end = endEl ? endEl.value : "";
+      const notes = notesEl ? notesEl.value : "";
 
       const totalHours = calcDayHours(start, end);
-      document.getElementById(`badge_${iso}`).textContent = totalHours > 0 ? totalHours.toFixed(1) + 'h' : '0.0h';
+      const badge = document.getElementById(`badge_${iso}`);
+      if (badge) {
+        badge.textContent = totalHours > 0 ? totalHours.toFixed(1) + 'h' : '0.0h';
+      }
 
       const entry = {
         dateStr: iso,
@@ -1116,18 +1181,18 @@
       const now = new Date();
       const timeStr = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
       
-      if (type === 'start') {
-        document.getElementById(`start_${iso}`).value = timeStr;
-      } else {
-        document.getElementById(`end_${iso}`).value = timeStr;
-      }
+      const el = document.getElementById(`${type}_${iso}`);
+      if (el) el.value = timeStr;
       onDayChange(iso);
     }
 
     function clearDay(iso) {
-      document.getElementById(`start_${iso}`).value = '';
-      document.getElementById(`end_${iso}`).value = '';
-      document.getElementById(`notes_${iso}`).value = '';
+      const s = document.getElementById(`start_${iso}`);
+      const e = document.getElementById(`end_${iso}`);
+      const n = document.getElementById(`notes_${iso}`);
+      if (s) s.value = '';
+      if (e) e.value = '';
+      if (n) n.value = '';
       onDayChange(iso);
     }
 
@@ -1168,7 +1233,9 @@
         try {
           const payload = {
             staffName: currentUser,
-            ...entry
+            ...entry,
+            startTime: normalizeTimeInput(entry.startTime),
+            endTime: normalizeTimeInput(entry.endTime)
           };
 
           await fetch(SCRIPT_URL, {
