@@ -316,11 +316,14 @@
       display: none;
     }
 
-    /* Mobile: Start & End on Row 1 (50% each), Notes on Row 2 (full width) */
+/* Mobile: Start & End on Row 1 with 12px gap, Notes on Row 2 (full width) */
     @media (max-width: 600px) {
+      .day-row-inputs {
+        gap: 12px;
+      }
       .time-col {
-        flex: 1 1 calc(50% - 5px);
-        max-width: calc(50% - 5px);
+        flex: 1 1 calc(50% - 6px);
+        max-width: calc(50% - 6px);
       }
       .notes-col {
         flex: 1 1 100%;
