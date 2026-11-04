@@ -51,7 +51,7 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
     }
     .brand {
       display: flex;
@@ -85,14 +85,14 @@
     .user-pill {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
       background: #1e293b;
       border: 1px solid var(--card-border);
       padding: 6px 12px;
       border-radius: 20px;
       cursor: pointer;
       min-width: 0;
-      max-width: 170px;
+      max-width: 150px;
     }
     .user-pill span {
       font-size: 0.85rem;
@@ -103,6 +103,27 @@
       text-overflow: ellipsis;
     }
     .user-pill svg { width: 14px; height: 14px; stroke: var(--text-muted); flex-shrink: 0; }
+
+    /* Jump to Today Pill Button */
+    .today-btn {
+      background: rgba(245, 158, 11, 0.15);
+      border: 1px solid rgba(245, 158, 11, 0.45);
+      color: var(--accent);
+      padding: 6px 11px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 0.76rem;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      flex-shrink: 0;
+      transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+    }
+    .today-btn:hover, .today-btn:active {
+      background: var(--accent);
+      color: #000;
+      border-color: var(--accent);
+    }
 
     .settings-btn {
       background: #1e293b;
@@ -227,7 +248,7 @@
       border-radius: var(--radius);
       padding: 14px;
       margin-bottom: 10px;
-      transition: border-color 0.15s ease;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
     }
     .day-card.today {
       border-color: var(--accent);
@@ -565,6 +586,7 @@
           </svg>
           <span id="activeUser">Select Name</span>
         </div>
+        <button type="button" class="today-btn" onclick="goToToday()" title="Jump to today">Today</button>
         <button class="settings-btn" onclick="openSettingsPrompt()" title="Settings">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="12" cy="12" r="3"></circle>
@@ -724,10 +746,7 @@
     // INITIALIZATION
     // -------------------------------------------------------------
     window.addEventListener("DOMContentLoaded", () => {
-      const today = new Date();
-      const diffDays = Math.floor((today - ANCHOR_DATE) / (1000 * 60 * 60 * 24));
-      periodOffset = Math.floor(diffDays / 14);
-
+      calculateCurrentPeriodOffset();
       fetchStaffRosterFromSheet();
 
       if (!currentUser) {
@@ -739,6 +758,33 @@
 
       renderPeriod();
     });
+
+    function calculateCurrentPeriodOffset() {
+      const today = new Date();
+      const diffDays = Math.floor((today - ANCHOR_DATE) / (1000 * 60 * 60 * 24));
+      periodOffset = Math.floor(diffDays / 14);
+    }
+
+    // -------------------------------------------------------------
+    // JUMP TO TODAY
+    // -------------------------------------------------------------
+    function goToToday() {
+      calculateCurrentPeriodOffset();
+      renderPeriod();
+
+      const todayIso = toISODate(new Date());
+      setTimeout(() => {
+        const card = document.getElementById(`card_${todayIso}`);
+        if (card) {
+          card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          card.style.borderColor = 'var(--accent)';
+          card.style.boxShadow = '0 0 0 2px var(--accent)';
+          setTimeout(() => {
+            card.style.boxShadow = '';
+          }, 1400);
+        }
+      }, 50);
+    }
 
     // -------------------------------------------------------------
     // ROSTER & PIN FETCH FROM SHEET
@@ -1108,7 +1154,6 @@
       const input = document.getElementById(`${type}_${iso}`);
       if (!input) return;
 
-      // If browser DOM value is empty because AM wasn't explicitly selected
       if (!input.value) {
         const keyId = `${iso}_${type}`;
         const buf = keyBuffers[keyId] || [];
@@ -1124,7 +1169,6 @@
           }
 
           if (m < 60) {
-            // Default hours < 12 to AM (e.g. 06:00 -> 06:00)
             if (h <= 12) {
               const formatted = String(h).padStart(2, "0") + ":" + String(m).padStart(2, "0");
               input.value = formatted;
