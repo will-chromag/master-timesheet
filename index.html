@@ -35,13 +35,21 @@
       padding-bottom: 80px;
       line-height: 1.4;
     }
-    header {
-      background: #111827;
-      border-bottom: 1px solid #1f2937;
-      padding: 12px 18px;
+
+    /* Sticky Container: keeps Header + Sync Bar + Period Card fixed at top */
+    .sticky-top-section {
       position: sticky;
       top: 0;
       z-index: 50;
+      background-color: var(--bg);
+      border-bottom: 1px solid rgba(51, 65, 85, 0.4);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+    }
+
+    header {
+      background: #111827;
+      border-bottom: 1px solid #1f2937;
+      padding: 10px 16px;
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -50,7 +58,7 @@
     .brand {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
       flex-shrink: 0;
     }
     .brand-title {
@@ -69,40 +77,64 @@
       text-transform: uppercase;
       letter-spacing: 0.05em;
     }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
     .user-pill {
       display: flex;
       align-items: center;
       gap: 8px;
       background: #1e293b;
       border: 1px solid var(--card-border);
-      padding: 6px 14px;
+      padding: 6px 12px;
       border-radius: 20px;
       cursor: pointer;
       min-width: 0;
-      flex-shrink: 1;
+      max-width: 170px;
     }
     .user-pill span {
-      font-size: 0.88rem;
+      font-size: 0.85rem;
       font-weight: 600;
       color: var(--text);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
-    .user-pill svg { width: 15px; height: 15px; stroke: var(--text-muted); flex-shrink: 0; }
+    .user-pill svg { width: 14px; height: 14px; stroke: var(--text-muted); flex-shrink: 0; }
+
+    .settings-btn {
+      background: #1e293b;
+      border: 1px solid var(--card-border);
+      color: var(--text-muted);
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: color 0.15s ease, border-color 0.15s ease;
+    }
+    .settings-btn:hover { color: #fff; border-color: #64748b; }
+    .settings-btn svg { width: 16px; height: 16px; }
 
     .sync-bar {
       background: #182234;
       border-bottom: 1px solid #243044;
-      padding: 6px 18px;
-      font-size: 0.75rem;
+      padding: 5px 16px;
+      font-size: 0.72rem;
       color: var(--text-muted);
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
     .sync-status { display: flex; align-items: center; gap: 6px; font-weight: 500; }
-    .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success); }
+    .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--success); }
     .dot.saving { background: var(--accent); animation: pulse 1s infinite; }
     .dot.error { background: var(--danger); }
     @keyframes pulse { 0% { opacity: 0.4; } 50% { opacity: 1; } 100% { opacity: 0.4; } }
@@ -110,41 +142,59 @@
     .container {
       max-width: 720px;
       margin: 0 auto;
-      padding: 16px;
+      padding: 12px 16px;
+    }
+    .sticky-period-box {
+      padding: 10px 16px 12px;
     }
 
     .period-card {
       background: var(--card-bg);
       border: 1px solid var(--card-border);
       border-radius: var(--radius);
-      padding: 16px;
-      margin-bottom: 16px;
+      padding: 12px 14px;
+      margin-bottom: 0;
     }
     .nav-row {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 14px;
+      margin-bottom: 10px;
     }
     .nav-btn {
       background: #334155;
       border: none;
       color: #fff;
-      width: 34px;
-      height: 34px;
+      width: 32px;
+      height: 32px;
       border-radius: 8px;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
     }
+    .period-title-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
     .period-title {
-      font-size: 1.05rem;
+      font-size: 0.98rem;
       font-weight: 700;
       text-align: center;
     }
+    .period-current-tag {
+      background: rgba(245, 158, 11, 0.2);
+      color: var(--accent);
+      font-size: 0.65rem;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 4px;
+      letter-spacing: 0.04em;
+    }
     .period-sub {
-      font-size: 0.78rem;
+      font-size: 0.74rem;
       color: var(--text-muted);
       text-align: center;
     }
@@ -152,23 +202,23 @@
     .stats-grid {
       display: grid;
       grid-template-columns: 1fr 1fr 1.2fr;
-      gap: 10px;
+      gap: 8px;
       background: #0f172a;
-      padding: 12px;
+      padding: 8px 12px;
       border-radius: 10px;
     }
     .stat-box { text-align: center; }
-    .stat-label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600; }
-    .stat-val { font-family: 'JetBrains Mono', monospace; font-size: 1.25rem; font-weight: 700; color: #fff; margin-top: 2px; }
+    .stat-label { font-size: 0.66rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600; }
+    .stat-val { font-family: 'JetBrains Mono', monospace; font-size: 1.15rem; font-weight: 700; color: #fff; margin-top: 1px; }
     .stat-val.highlight { color: var(--accent); }
 
     .week-header {
-      font-size: 0.85rem;
+      font-size: 0.82rem;
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.05em;
       color: var(--text-muted);
-      margin: 20px 0 10px 4px;
+      margin: 16px 0 8px 4px;
       display: flex;
       justify-content: space-between;
     }
@@ -338,57 +388,70 @@
 </head>
 <body>
 
-  <!-- Top App Bar -->
-  <header>
-    <div class="brand">
-      <div class="brand-title">CHROMAG</div>
-      <div class="brand-badge">Hours</div>
-    </div>
-    <div class="user-pill" onclick="openPicker()">
-      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-      </svg>
-      <span id="activeUser">Select Name</span>
-    </div>
-  </header>
+  <!-- Sticky Top Section: Header + Sync Bar + Pay Period Summary -->
+  <div class="sticky-top-section">
+    <header>
+      <div class="brand">
+        <div class="brand-title">CHROMAG</div>
+        <div class="brand-badge">Hours</div>
+      </div>
+      <div class="header-actions">
+        <div class="user-pill" onclick="openPicker()">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+          </svg>
+          <span id="activeUser">Select Name</span>
+        </div>
+        <button class="settings-btn" onclick="editScriptUrl()" title="Settings">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+          </svg>
+        </button>
+      </div>
+    </header>
 
-  <!-- Auto-save Sync Status Bar -->
-  <div class="sync-bar">
-    <div class="sync-status">
-      <div class="dot" id="syncDot"></div>
-      <span id="syncText">Connected</span>
+    <div class="sync-bar">
+      <div class="sync-status">
+        <div class="dot" id="syncDot"></div>
+        <span id="syncText">Connected</span>
+      </div>
     </div>
-    <span id="scriptIndicator" style="cursor:pointer;" onclick="editScriptUrl()">Settings</span>
+
+    <!-- Sticky Pay Period Header Card -->
+    <div class="container sticky-period-box">
+      <div class="period-card">
+        <div class="nav-row">
+          <button class="nav-btn" onclick="changePeriod(-1)">&larr;</button>
+          <div>
+            <div class="period-title-row">
+              <span class="period-title" id="periodDates">Nov 2 &ndash; Nov 15, 2026</span>
+              <span class="period-current-tag" id="currentPeriodPill">CURRENT</span>
+            </div>
+            <div class="period-sub">14-Day Pay Period</div>
+          </div>
+          <button class="nav-btn" onclick="changePeriod(1)">&rarr;</button>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-box">
+            <div class="stat-label">Week 1</div>
+            <div class="stat-val" id="week1Total">0.0h</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-label">Week 2</div>
+            <div class="stat-val" id="week2Total">0.0h</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-label">Period Total</div>
+            <div class="stat-val highlight" id="periodTotal">0.0h</div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <div class="container">
-    <!-- Pay Period Header Card -->
-    <div class="period-card">
-      <div class="nav-row">
-        <button class="nav-btn" onclick="changePeriod(-1)">&larr;</button>
-        <div>
-          <div class="period-title" id="periodDates">Nov 2 &ndash; Nov 15, 2026</div>
-          <div class="period-sub">14-Day Pay Period</div>
-        </div>
-        <button class="nav-btn" onclick="changePeriod(1)">&rarr;</button>
-      </div>
-
-      <div class="stats-grid">
-        <div class="stat-box">
-          <div class="stat-label">Week 1</div>
-          <div class="stat-val" id="week1Total">0.0h</div>
-        </div>
-        <div class="stat-box">
-          <div class="stat-label">Week 2</div>
-          <div class="stat-val" id="week2Total">0.0h</div>
-        </div>
-        <div class="stat-box">
-          <div class="stat-label">Period Total</div>
-          <div class="stat-val highlight" id="periodTotal">0.0h</div>
-        </div>
-      </div>
-    </div>
-
     <!-- 14 Days List -->
     <div id="daysList"></div>
   </div>
@@ -452,6 +515,11 @@
     // INITIALIZATION
     // -------------------------------------------------------------
     window.addEventListener("DOMContentLoaded", () => {
+      // Calculate active period offset relative to today
+      const today = new Date();
+      const diffDays = Math.floor((today - ANCHOR_DATE) / (1000 * 60 * 60 * 24));
+      periodOffset = Math.floor(diffDays / 14);
+
       const params = new URLSearchParams(window.location.search);
       if (params.get("user")) {
         currentUser = params.get("user");
@@ -477,7 +545,7 @@
       setSyncStatus("Loading your saved hours...", "saving");
 
       try {
-        const res = await fetch(`${SCRIPT_URL}?staffName=${encodeURIComponent(currentUser)}`);
+        const res = await fetch(`${SCRIPT_URL}?staffName=${encodeURIComponent(currentUser)}&_t=${Date.now()}`);
         const data = await res.json();
 
         if (data.status === "success") {
@@ -539,6 +607,18 @@
       const { start, end } = getPeriodRange(periodOffset);
       document.getElementById("periodDates").textContent = 
         `${formatDateShort(start)} – ${formatDateShort(end)}, ${start.getFullYear()}`;
+
+      // Check if this viewed period is the current one
+      const today = new Date();
+      const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      const pStart = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+      const pEnd = new Date(end.getFullYear(), end.getMonth(), end.getDate());
+      const isCurrentPeriod = (todayStart >= pStart && todayStart <= pEnd);
+
+      const pill = document.getElementById("currentPeriodPill");
+      if (pill) {
+        pill.style.display = isCurrentPeriod ? "inline-block" : "none";
+      }
 
       const container = document.getElementById("daysList");
       container.innerHTML = "";
@@ -791,4 +871,3 @@
   </script>
 </body>
 </html>
- 
