@@ -460,7 +460,6 @@
       border-color: var(--accent);
     }
 
-    /* Admin Footer Button in Picker Modal */
     .picker-footer {
       margin-top: 14px;
       padding-top: 12px;
@@ -619,7 +618,7 @@
         <button class="settings-btn" onclick="openSettingsPrompt()" title="Settings">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="12" cy="12" r="3"></circle>
-            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
           </svg>
         </button>
       </div>
@@ -743,9 +742,9 @@
     // CONFIGURATION & STATE
     // -------------------------------------------------------------
     const PRIMARY_URL = "https://script.google.com/macros/s/AKfycbzC4MUbgItHnLffi9Zh_Z1G8hbNGdYOpArgUylPkY5ALFs-NFweKwDUC3bk1lCGyKXH/exec";
-    const ADMIN_PASSWORD = "Gargamel1234!";
 
     let SCRIPT_URL = localStorage.getItem("chromag_script_url") || PRIMARY_URL;
+    let currentAdminPassword = ""; // Kept in memory only during active admin session
 
     let staffRoster = [
       { name: "Claire Buchar", pin: "1234" },
@@ -909,9 +908,9 @@
     });
 
     // -------------------------------------------------------------
-    // ADMIN SETTINGS MODAL
+    // ADMIN SETTINGS (SERVER-SIDE VERIFIED)
     // -------------------------------------------------------------
-    function openSettingsPrompt() {
+    async function openSettingsPrompt() {
       document.getElementById("pickerModal").classList.add("hidden");
       document.getElementById("pinModal").classList.add("hidden");
 
@@ -920,12 +919,31 @@
         if (!currentUser) openPicker();
         return;
       }
-      if (pwd !== ADMIN_PASSWORD) {
-        alert("Incorrect password.");
+
+      setSyncStatus("Verifying admin password...", "saving");
+
+      try {
+        const res = await fetch(SCRIPT_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({ action: "verifyAdminPassword", password: pwd })
+        });
+        const result = await res.json();
+
+        if (result.status === "success") {
+          currentAdminPassword = pwd;
+          setSyncStatus("Connected", "normal");
+          openSettingsModal();
+        } else {
+          setSyncStatus("Connected", "normal");
+          alert("Incorrect password.");
+          if (!currentUser) openPicker();
+        }
+      } catch (err) {
+        setSyncStatus("Connected", "normal");
+        alert("Could not reach backend to verify password.");
         if (!currentUser) openPicker();
-        return;
       }
-      openSettingsModal();
     }
 
     let workingRoster = [];
@@ -939,6 +957,7 @@
 
     function closeSettingsModal() {
       document.getElementById("settingsModal").classList.add("hidden");
+      currentAdminPassword = "";
       if (!currentUser) openPicker();
     }
 
@@ -1006,7 +1025,7 @@
       try {
         const payload = {
           action: "saveStaff",
-          adminPassword: ADMIN_PASSWORD,
+          adminPassword: currentAdminPassword,
           staffList: workingRoster
         };
 
