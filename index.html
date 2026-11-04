@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Chromag Bikes Timesheet</title>
   
+  <!-- Clean SVG Clock Favicon and Touch Icon -->
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><circle cx='12' cy='12' r='10' fill='%231C274C'/><path fill-rule='evenodd' clip-rule='evenodd' d='M12 7.25c.414 0 .75.336.75.75v3.689l2.28 2.28a.75.75 0 1 1-1.06 1.062L11.47 12.53A.749.749 0 0 1 11.25 12V8c0-.414.336-.75.75-.75z' fill='%23FFFFFF'/></svg>">
   <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><circle cx='12' cy='12' r='10' fill='%231C274C'/><path fill-rule='evenodd' clip-rule='evenodd' d='M12 7.25c.414 0 .75.336.75.75v3.689l2.28 2.28a.75.75 0 1 1-1.06 1.062L11.47 12.53A.749.749 0 0 1 11.25 12V8c0-.414.336-.75.75-.75z' fill='%23FFFFFF'/></svg>">
 
@@ -35,6 +36,7 @@
       line-height: 1.4;
     }
 
+    /* Sticky Container: keeps Header + Sync Bar + Period Card fixed at top */
     .sticky-top-section {
       position: sticky;
       top: 0;
@@ -348,8 +350,31 @@
       padding: 20px;
       box-shadow: 0 20px 25px -5px rgba(0,0,0,0.5);
     }
-    .modal-header h2 { font-size: 1.15rem; font-weight: 800; margin-bottom: 4px; }
+    .modal-header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 4px;
+    }
+    .modal-header h2 { font-size: 1.15rem; font-weight: 800; }
     .modal-header p { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 14px; }
+    
+    .btn-close-modal {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 1.25rem;
+      line-height: 1;
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 6px;
+      transition: color 0.15s ease, background 0.15s ease;
+    }
+    .btn-close-modal:hover {
+      color: #fff;
+      background: #334155;
+    }
+
     .search-box {
       width: 100%;
       background: #0f172a;
@@ -596,7 +621,10 @@
   <div class="modal-backdrop hidden" id="settingsModal">
     <div class="modal-content">
       <div class="modal-header">
-        <h2>Admin Settings</h2>
+        <div class="modal-header-top">
+          <h2>Admin Settings</h2>
+          <button type="button" class="btn-close-modal" onclick="closeSettingsModal()" title="Close without saving">&times;</button>
+        </div>
         <p>Manage backend connection and employee 4-digit PINs.</p>
       </div>
 
@@ -874,7 +902,6 @@
           alert("Error saving: " + (resp.message || "Unknown error"));
         }
       } catch (err) {
-        // Fallback save locally if network offline
         staffRoster = JSON.parse(JSON.stringify(workingRoster));
         localStorage.setItem("chromag_roster", JSON.stringify(staffRoster));
         alert("Saved locally (could not reach sheet immediately).");
