@@ -104,7 +104,6 @@
     }
     .user-pill svg { width: 14px; height: 14px; stroke: var(--text-muted); flex-shrink: 0; }
 
-    /* Jump to Today Pill Button */
     .today-btn {
       background: rgba(245, 158, 11, 0.15);
       border: 1px solid rgba(245, 158, 11, 0.45);
@@ -321,7 +320,6 @@
       height: 38px;
     }
 
-    /* Native Time Input with JetBrains Mono */
     input[type="time"] {
       font-family: 'JetBrains Mono', monospace !important;
       font-size: 0.85rem !important;
@@ -442,6 +440,8 @@
       display: flex;
       flex-direction: column;
       gap: 6px;
+      flex: 1;
+      min-height: 0;
     }
     .staff-opt {
       text-align: left;
@@ -459,6 +459,35 @@
       color: #000;
       border-color: var(--accent);
     }
+
+    /* Admin Footer Button in Picker Modal */
+    .picker-footer {
+      margin-top: 14px;
+      padding-top: 12px;
+      border-top: 1px solid var(--card-border);
+      display: flex;
+      justify-content: center;
+    }
+    .admin-link-btn {
+      background: transparent;
+      border: 1px solid #334155;
+      color: var(--text-muted);
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+    }
+    .admin-link-btn:hover {
+      color: #fff;
+      border-color: #64748b;
+      background: #111827;
+    }
+    .admin-link-btn svg { width: 14px; height: 14px; }
 
     .pin-input {
       font-family: 'JetBrains Mono', monospace;
@@ -590,7 +619,7 @@
         <button class="settings-btn" onclick="openSettingsPrompt()" title="Settings">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="12" cy="12" r="3"></circle>
-            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
           </svg>
         </button>
       </div>
@@ -649,6 +678,17 @@
         <input type="text" class="search-box" id="nameFilter" placeholder="Type your name..." oninput="filterStaff()">
       </div>
       <div class="staff-list" id="staffOptions"></div>
+      
+      <!-- Admin Button inside Picker Modal -->
+      <div class="picker-footer">
+        <button type="button" class="admin-link-btn" onclick="openSettingsPrompt()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+          </svg>
+          Admin Settings
+        </button>
+      </div>
     </div>
   </div>
 
@@ -720,6 +760,7 @@
       { name: "Kraig Kinsman", pin: "1234" },
       { name: "Lachie O’Connor", pin: "1234" },
       { name: "Monique Joyce", pin: "1234" },
+      { name: "Pete Fowler", pin: "1234" },
       { name: "Rebecca Ritz", pin: "1234" },
       { name: "Sara Hrubesova", pin: "1234" },
       { name: "Steven Janney", pin: "1234" },
@@ -739,7 +780,6 @@
     let selectedUserForPin = null;
     let syncTimer = null;
 
-    // Buffer to track keystrokes on time inputs to resolve partial inputs (like "06:00")
     const keyBuffers = {};
 
     // -------------------------------------------------------------
@@ -871,17 +911,24 @@
     // -------------------------------------------------------------
     // ADMIN SETTINGS MODAL
     // -------------------------------------------------------------
-    let workingRoster = [];
-
     function openSettingsPrompt() {
+      document.getElementById("pickerModal").classList.add("hidden");
+      document.getElementById("pinModal").classList.add("hidden");
+
       const pwd = prompt("Enter Admin Password:");
-      if (!pwd) return;
+      if (!pwd) {
+        if (!currentUser) openPicker();
+        return;
+      }
       if (pwd !== ADMIN_PASSWORD) {
         alert("Incorrect password.");
+        if (!currentUser) openPicker();
         return;
       }
       openSettingsModal();
     }
+
+    let workingRoster = [];
 
     function openSettingsModal() {
       workingRoster = JSON.parse(JSON.stringify(staffRoster));
@@ -892,6 +939,7 @@
 
     function closeSettingsModal() {
       document.getElementById("settingsModal").classList.add("hidden");
+      if (!currentUser) openPicker();
     }
 
     function renderSettingsStaffList() {
