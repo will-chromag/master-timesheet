@@ -274,11 +274,9 @@
     }
     .quick-btn:hover { background: #2f4059; color: #fff; }
 
-    /* Responsive Inputs Grid */
+    /* Inputs Layout */
     .day-row-inputs {
       display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
       align-items: flex-end;
       width: 100%;
     }
@@ -308,7 +306,7 @@
       font-size: 0.85rem !important;
       font-weight: 500;
       text-align: center;
-      padding: 8px 6px;
+      padding: 8px 4px;
       color-scheme: dark;
     }
     input[type="time"]::-webkit-calendar-picker-indicator {
@@ -316,23 +314,41 @@
       display: none;
     }
 
-/* Mobile: Start & End on Row 1 with 12px gap, Notes on Row 2 (full width) */
+    .time-col {
+      min-width: 0;
+      width: 100%;
+    }
+
+    /* Mobile: Start & End on Row 1 with 12px gap, Notes on Row 2 */
     @media (max-width: 600px) {
       .day-row-inputs {
-        gap: 12px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px !important;
       }
       .time-col {
-        flex: 1 1 calc(50% - 6px);
-        max-width: calc(50% - 6px);
+        flex: 1 1 calc(50% - 6px) !important;
+        max-width: calc(50% - 6px) !important;
+        min-width: 0 !important;
+      }
+      .time-col input[type="time"] {
+        width: 100% !important;
+        min-width: 0 !important;
+        box-sizing: border-box !important;
       }
       .notes-col {
-        flex: 1 1 100%;
-        width: 100%;
+        flex: 1 1 100% !important;
+        width: 100% !important;
+        min-width: 0 !important;
       }
     }
 
     /* Desktop: All 3 on single line */
     @media (min-width: 601px) {
+      .day-row-inputs {
+        gap: 10px;
+        flex-wrap: nowrap;
+      }
       .time-col {
         flex: 0 0 130px;
         max-width: 130px;
