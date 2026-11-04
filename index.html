@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Chromag Bikes Timesheet</title>
   
-  <!-- Clean SVG Clock Favicon and Touch Icon -->
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><circle cx='12' cy='12' r='10' fill='%231C274C'/><path fill-rule='evenodd' clip-rule='evenodd' d='M12 7.25c.414 0 .75.336.75.75v3.689l2.28 2.28a.75.75 0 1 1-1.06 1.062L11.47 12.53A.749.749 0 0 1 11.25 12V8c0-.414.336-.75.75-.75z' fill='%23FFFFFF'/></svg>">
   <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><circle cx='12' cy='12' r='10' fill='%231C274C'/><path fill-rule='evenodd' clip-rule='evenodd' d='M12 7.25c.414 0 .75.336.75.75v3.689l2.28 2.28a.75.75 0 1 1-1.06 1.062L11.47 12.53A.749.749 0 0 1 11.25 12V8c0-.414.336-.75.75-.75z' fill='%23FFFFFF'/></svg>">
 
@@ -36,7 +35,6 @@
       line-height: 1.4;
     }
 
-    /* Sticky Container: keeps Header + Sync Bar + Period Card fixed at top */
     .sticky-top-section {
       position: sticky;
       top: 0;
@@ -276,7 +274,6 @@
     }
     .quick-btn:hover { background: #2f4059; color: #fff; }
 
-    /* Single Line Row: Start, End, Notes across mobile and desktop */
     .day-row-inputs {
       display: flex;
       gap: 8px;
@@ -326,6 +323,7 @@
       padding: 8px 10px;
     }
 
+    /* Modal Backdrop and Containers */
     .modal-backdrop {
       position: fixed;
       inset: 0;
@@ -343,7 +341,7 @@
       border: 1px solid var(--card-border);
       border-radius: 16px;
       width: 100%;
-      max-width: 440px;
+      max-width: 480px;
       max-height: 85vh;
       display: flex;
       flex-direction: column;
@@ -384,11 +382,122 @@
       color: #000;
       border-color: var(--accent);
     }
+
+    /* PIN verification styles */
+    .pin-input {
+      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: 8px;
+      font-size: 1.5rem;
+      text-align: center;
+      width: 160px;
+      margin: 12px auto;
+      padding: 8px;
+      background: #0f172a;
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      color: #fff;
+      display: block;
+    }
+
+    /* Settings UI styles */
+    .settings-section-title {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin: 14px 0 6px 0;
+    }
+    .settings-table-wrapper {
+      max-height: 220px;
+      overflow-y: auto;
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      background: #0f172a;
+      margin-bottom: 12px;
+    }
+    .settings-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      border-bottom: 1px solid #1e293b;
+    }
+    .settings-row:last-child { border-bottom: none; }
+    .staff-row-name {
+      flex: 1;
+      font-size: 0.88rem;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .staff-row-pin {
+      width: 65px;
+      background: #1e293b;
+      border: 1px solid var(--card-border);
+      border-radius: 6px;
+      color: #fff;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      text-align: center;
+      padding: 4px;
+    }
+    .btn-delete {
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      color: #ef4444;
+      padding: 4px 8px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+    .btn-delete:hover { background: #ef4444; color: #fff; }
+    .add-staff-form {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+    .add-staff-form input {
+      background: #0f172a;
+      border: 1px solid var(--card-border);
+      border-radius: 6px;
+      color: #fff;
+      padding: 6px 10px;
+      font-size: 0.85rem;
+    }
+    .btn-primary {
+      background: var(--accent);
+      color: #000;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 0.88rem;
+      cursor: pointer;
+    }
+    .btn-secondary {
+      background: #334155;
+      color: #fff;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.88rem;
+      cursor: pointer;
+    }
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 14px;
+    }
   </style>
 </head>
 <body>
 
-  <!-- Sticky Top Section: Header + Sync Bar + Pay Period Summary -->
+  <!-- Sticky Top Wrapper: Header + Sync Bar + Pay Period Summary -->
   <div class="sticky-top-section">
     <header>
       <div class="brand">
@@ -402,7 +511,7 @@
           </svg>
           <span id="activeUser">Select Name</span>
         </div>
-        <button class="settings-btn" onclick="editScriptUrl()" title="Settings">
+        <button class="settings-btn" onclick="openSettingsPrompt()" title="Settings">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="12" cy="12" r="3"></circle>
             <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
@@ -452,7 +561,6 @@
   </div>
 
   <div class="container">
-    <!-- 14 Days List -->
     <div id="daysList"></div>
   </div>
 
@@ -461,70 +569,107 @@
     <div class="modal-content">
       <div class="modal-header">
         <h2>Who is logging time?</h2>
-        <p>Pick your name once. All hours will route directly to your personal tab in Google Sheets.</p>
+        <p>Pick your name to log hours.</p>
         <input type="text" class="search-box" id="nameFilter" placeholder="Type your name..." oninput="filterStaff()">
       </div>
       <div class="staff-list" id="staffOptions"></div>
     </div>
   </div>
 
+  <!-- User PIN Verification Modal -->
+  <div class="modal-backdrop hidden" id="pinModal">
+    <div class="modal-content" style="max-width: 360px; text-align: center;">
+      <div class="modal-header">
+        <h2 id="pinModalTitle">Enter PIN</h2>
+        <p>Enter your 4-digit PIN to access your timesheet.</p>
+        <input type="password" maxlength="4" pattern="[0-9]*" inputmode="numeric" class="pin-input" id="userPinInput">
+        <div id="pinErrorMsg" style="color: var(--danger); font-size: 0.8rem; height: 18px;"></div>
+      </div>
+      <div class="modal-actions" style="justify-content: center;">
+        <button class="btn-secondary" onclick="closePinModal()">Cancel</button>
+        <button class="btn-primary" onclick="submitUserPin()">Unlock</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Admin Settings Modal -->
+  <div class="modal-backdrop hidden" id="settingsModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Admin Settings</h2>
+        <p>Manage backend connection and employee 4-digit PINs.</p>
+      </div>
+
+      <div class="settings-section-title">Backend Script URL</div>
+      <input type="text" class="search-box" id="settingsScriptUrl" style="margin-bottom: 8px;">
+
+      <div class="settings-section-title">Employee Roster &amp; PINs</div>
+      <div class="settings-table-wrapper" id="settingsStaffList"></div>
+
+      <div class="add-staff-form">
+        <input type="text" id="newStaffName" placeholder="New employee name..." style="flex: 1;">
+        <input type="text" id="newStaffPin" placeholder="PIN" maxlength="4" style="width: 70px; text-align: center;">
+        <button class="btn-primary" style="padding: 6px 12px;" onclick="addNewStaffMember()">Add</button>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeSettingsModal()">Cancel</button>
+        <button class="btn-primary" id="saveSettingsBtn" onclick="saveAdminSettings()">Save to Sheet</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     // -------------------------------------------------------------
-    // CONFIGURATION
+    // CONFIGURATION & STATE
     // -------------------------------------------------------------
     const PRIMARY_URL = "https://script.google.com/macros/s/AKfycbzC4MUbgItHnLffi9Zh_Z1G8hbNGdYOpArgUylPkY5ALFs-NFweKwDUC3bk1lCGyKXH/exec";
-    
-    // Auto-update to new deployment if old one is cached
-    if (localStorage.getItem("chromag_script_url") && (
-        localStorage.getItem("chromag_script_url").includes("AKfycbyNnFwO7HJghaxHanim") ||
-        localStorage.getItem("chromag_script_url").includes("PASTE_YOUR")
-    )) {
-      localStorage.removeItem("chromag_script_url");
-    }
-    
+    const ADMIN_PASSWORD = "Gargamel1234!";
+
     let SCRIPT_URL = localStorage.getItem("chromag_script_url") || PRIMARY_URL;
 
-    const STAFF_MEMBERS = [
-      "Claire Buchar",
-      "Dave Thoss",
-      "Emilie de Crombrugghe",
-      "Emily Slaco",
-      "Ian Ritz",
-      "James Hawkins",
-      "JM Josse",
-      "Joe Swann",
-      "Julian Hine",
-      "Kraig Kinsman",
-      "Lachie O’Connor",
-      "Monique Joyce",
-      "Rebecca Ritz",
-      "Sara Hrubesova",
-      "Steven Janney",
-      "Tim Wilson",
-      "William Westwood"
-    ].sort();
+    // Fallback seed staff list if offline or before first fetch
+    let staffRoster = [
+      { name: "Claire Buchar", pin: "1234" },
+      { name: "Dave Thoss", pin: "1234" },
+      { name: "Emilie de Crombrugghe", pin: "1234" },
+      { name: "Emily Slaco", pin: "1234" },
+      { name: "Ian Ritz", pin: "1234" },
+      { name: "James Hawkins", pin: "1234" },
+      { name: "JM Josse", pin: "1234" },
+      { name: "Joe Swann", pin: "1234" },
+      { name: "Julian Hine", pin: "1234" },
+      { name: "Kraig Kinsman", pin: "1234" },
+      { name: "Lachie O’Connor", pin: "1234" },
+      { name: "Monique Joyce", pin: "1234" },
+      { name: "Rebecca Ritz", pin: "1234" },
+      { name: "Sara Hrubesova", pin: "1234" },
+      { name: "Steven Janney", pin: "1234" },
+      { name: "Tim Wilson", pin: "1234" },
+      { name: "William Westwood", pin: "1234" }
+    ];
 
-    // Anchor period: Monday, Nov 2, 2026
-    const ANCHOR_DATE = new Date(2026, 10, 2); // Month is 0-indexed (10 = Nov)
+    const cachedRoster = localStorage.getItem("chromag_roster");
+    if (cachedRoster) {
+      try { staffRoster = JSON.parse(cachedRoster); } catch(e){}
+    }
+
+    const ANCHOR_DATE = new Date(2026, 10, 2); // Nov 2, 2026
     let periodOffset = 0;
 
     let currentUser = localStorage.getItem("chromag_user") || "";
+    let selectedUserForPin = null;
     let syncTimer = null;
 
     // -------------------------------------------------------------
     // INITIALIZATION
     // -------------------------------------------------------------
     window.addEventListener("DOMContentLoaded", () => {
-      // Calculate active period offset relative to today
       const today = new Date();
       const diffDays = Math.floor((today - ANCHOR_DATE) / (1000 * 60 * 60 * 24));
       periodOffset = Math.floor(diffDays / 14);
 
-      const params = new URLSearchParams(window.location.search);
-      if (params.get("user")) {
-        currentUser = params.get("user");
-        localStorage.setItem("chromag_user", currentUser);
-      }
+      fetchStaffRosterFromSheet();
 
       if (!currentUser) {
         openPicker();
@@ -535,6 +680,210 @@
 
       renderPeriod();
     });
+
+    // -------------------------------------------------------------
+    // ROSTER & PIN FETCH FROM SHEET
+    // -------------------------------------------------------------
+    async function fetchStaffRosterFromSheet() {
+      if (!SCRIPT_URL || SCRIPT_URL.includes("PASTE_YOUR")) return;
+      try {
+        const res = await fetch(`${SCRIPT_URL}?action=getStaff&_t=${Date.now()}`);
+        const data = await res.json();
+        if (data.status === "success" && data.staff && data.staff.length > 0) {
+          staffRoster = data.staff.sort((a,b) => a.name.localeCompare(b.name));
+          localStorage.setItem("chromag_roster", JSON.stringify(staffRoster));
+        }
+      } catch (err) {
+        console.warn("Could not fetch remote roster, using cached/default list.", err);
+      }
+    }
+
+    // -------------------------------------------------------------
+    // USER SELECTION & PIN VERIFICATION
+    // -------------------------------------------------------------
+    function openPicker() {
+      document.getElementById("pickerModal").classList.remove("hidden");
+      renderStaffOptions(staffRoster);
+    }
+
+    function renderStaffOptions(list) {
+      const container = document.getElementById("staffOptions");
+      container.innerHTML = "";
+      list.forEach(member => {
+        const btn = document.createElement("button");
+        btn.className = "staff-opt";
+        btn.textContent = member.name;
+        btn.onclick = () => requestUserPin(member);
+        container.appendChild(btn);
+      });
+    }
+
+    function filterStaff() {
+      const q = document.getElementById("nameFilter").value.toLowerCase();
+      renderStaffOptions(staffRoster.filter(m => m.name.toLowerCase().includes(q)));
+    }
+
+    function requestUserPin(member) {
+      selectedUserForPin = member;
+      document.getElementById("pickerModal").classList.add("hidden");
+      document.getElementById("pinModalTitle").textContent = member.name;
+      document.getElementById("userPinInput").value = "";
+      document.getElementById("pinErrorMsg").textContent = "";
+      document.getElementById("pinModal").classList.remove("hidden");
+      setTimeout(() => document.getElementById("userPinInput").focus(), 150);
+    }
+
+    function closePinModal() {
+      document.getElementById("pinModal").classList.add("hidden");
+      selectedUserForPin = null;
+      if (!currentUser) openPicker();
+    }
+
+    function submitUserPin() {
+      if (!selectedUserForPin) return;
+      const enteredPin = document.getElementById("userPinInput").value.trim();
+      const expectedPin = String(selectedUserForPin.pin || "1234").trim();
+
+      if (enteredPin === expectedPin) {
+        currentUser = selectedUserForPin.name;
+        localStorage.setItem("chromag_user", currentUser);
+        document.getElementById("activeUser").textContent = currentUser;
+        document.getElementById("pinModal").classList.add("hidden");
+        selectedUserForPin = null;
+
+        renderPeriod();
+        loadUserDataFromSheet();
+      } else {
+        document.getElementById("pinErrorMsg").textContent = "Incorrect PIN. Try again.";
+        document.getElementById("userPinInput").value = "";
+      }
+    }
+
+    // Enter key submits PIN
+    document.getElementById("userPinInput").addEventListener("keyup", (e) => {
+      if (e.key === "Enter") submitUserPin();
+    });
+
+    // -------------------------------------------------------------
+    // ADMIN SETTINGS MODAL
+    // -------------------------------------------------------------
+    let workingRoster = [];
+
+    function openSettingsPrompt() {
+      const pwd = prompt("Enter Admin Password:");
+      if (!pwd) return;
+      if (pwd !== ADMIN_PASSWORD) {
+        alert("Incorrect password.");
+        return;
+      }
+      openSettingsModal();
+    }
+
+    function openSettingsModal() {
+      workingRoster = JSON.parse(JSON.stringify(staffRoster));
+      document.getElementById("settingsScriptUrl").value = SCRIPT_URL;
+      renderSettingsStaffList();
+      document.getElementById("settingsModal").classList.remove("hidden");
+    }
+
+    function closeSettingsModal() {
+      document.getElementById("settingsModal").classList.add("hidden");
+    }
+
+    function renderSettingsStaffList() {
+      const container = document.getElementById("settingsStaffList");
+      container.innerHTML = "";
+
+      workingRoster.forEach((member, index) => {
+        const row = document.createElement("div");
+        row.className = "settings-row";
+        row.innerHTML = `
+          <span class="staff-row-name">${member.name}</span>
+          <input type="text" class="staff-row-pin" maxlength="4" value="${member.pin || '1234'}" onchange="updateWorkingPin(${index}, this.value)" title="4-Digit PIN">
+          <button class="btn-delete" onclick="removeWorkingStaff(${index})">Remove</button>
+        `;
+        container.appendChild(row);
+      });
+    }
+
+    function updateWorkingPin(idx, val) {
+      workingRoster[idx].pin = String(val).trim();
+    }
+
+    function removeWorkingStaff(idx) {
+      const member = workingRoster[idx];
+      if (confirm(`Remove ${member.name} from the active app list? (Their historical tab in Google Sheets will remain safe)`)) {
+        workingRoster.splice(idx, 1);
+        renderSettingsStaffList();
+      }
+    }
+
+    function addNewStaffMember() {
+      const nameInput = document.getElementById("newStaffName");
+      const pinInput = document.getElementById("newStaffPin");
+      const name = nameInput.value.trim();
+      const pin = pinInput.value.trim() || "1234";
+
+      if (!name) {
+        alert("Please enter a name.");
+        return;
+      }
+      if (workingRoster.some(m => m.name.toLowerCase() === name.toLowerCase())) {
+        alert("An employee with that name is already listed.");
+        return;
+      }
+
+      workingRoster.push({ name: name, pin: pin });
+      workingRoster.sort((a,b) => a.name.localeCompare(b.name));
+      nameInput.value = "";
+      pinInput.value = "";
+      renderSettingsStaffList();
+    }
+
+    async function saveAdminSettings() {
+      const saveBtn = document.getElementById("saveSettingsBtn");
+      saveBtn.textContent = "Saving...";
+      saveBtn.disabled = true;
+
+      const newUrl = document.getElementById("settingsScriptUrl").value.trim();
+      if (newUrl) {
+        SCRIPT_URL = newUrl;
+        localStorage.setItem("chromag_script_url", SCRIPT_URL);
+      }
+
+      try {
+        const payload = {
+          action: "saveStaff",
+          adminPassword: ADMIN_PASSWORD,
+          staffList: workingRoster
+        };
+
+        const res = await fetch(SCRIPT_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify(payload)
+        });
+
+        const resp = await res.json();
+        if (resp.status === "success") {
+          staffRoster = JSON.parse(JSON.stringify(workingRoster));
+          localStorage.setItem("chromag_roster", JSON.stringify(staffRoster));
+          alert("Settings and staff roster saved to Google Sheets!");
+          closeSettingsModal();
+        } else {
+          alert("Error saving: " + (resp.message || "Unknown error"));
+        }
+      } catch (err) {
+        // Fallback save locally if network offline
+        staffRoster = JSON.parse(JSON.stringify(workingRoster));
+        localStorage.setItem("chromag_roster", JSON.stringify(staffRoster));
+        alert("Saved locally (could not reach sheet immediately).");
+        closeSettingsModal();
+      } finally {
+        saveBtn.textContent = "Save to Sheet";
+        saveBtn.disabled = false;
+      }
+    }
 
     // -------------------------------------------------------------
     // CROSS-DEVICE DATA SYNC (Sheet -> App)
@@ -549,7 +898,6 @@
         const data = await res.json();
 
         if (data.status === "success") {
-          // Clear cached local entries for this user so row deletions in Sheets reflect immediately
           const userPrefix = `entry_${currentUser}_`;
           Object.keys(localStorage).forEach(key => {
             if (key.startsWith(userPrefix)) {
@@ -557,7 +905,6 @@
             }
           });
 
-          // Re-populate with live data from sheet
           if (data.entries && data.entries.length > 0) {
             data.entries.forEach(entry => {
               localStorage.setItem(storageKey(entry.dateStr), JSON.stringify(entry));
@@ -580,10 +927,8 @@
     function getPeriodRange(offset) {
       const start = new Date(ANCHOR_DATE);
       start.setDate(start.getDate() + (offset * 14));
-      
       const end = new Date(start);
       end.setDate(end.getDate() + 13);
-      
       return { start, end };
     }
 
@@ -608,7 +953,6 @@
       document.getElementById("periodDates").textContent = 
         `${formatDateShort(start)} – ${formatDateShort(end)}, ${start.getFullYear()}`;
 
-      // Check if this viewed period is the current one
       const today = new Date();
       const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
       const pStart = new Date(start.getFullYear(), start.getMonth(), start.getDate());
@@ -622,7 +966,6 @@
 
       const container = document.getElementById("daysList");
       container.innerHTML = "";
-
       const todayStr = toISODate(new Date());
 
       for (let i = 0; i < 14; i++) {
@@ -700,9 +1043,7 @@
       let startMinutes = sh * 60 + sm;
       let endMinutes = eh * 60 + em;
       
-      if (endMinutes < startMinutes) {
-        endMinutes += 24 * 60;
-      }
+      if (endMinutes < startMinutes) endMinutes += 24 * 60;
       
       let worked = endMinutes - startMinutes;
       if (worked < 0) worked = 0;
@@ -824,49 +1165,6 @@
       dot.className = "dot";
       if (state === "saving") dot.classList.add("saving");
       if (state === "error") dot.classList.add("error");
-    }
-
-    // -------------------------------------------------------------
-    // NAME PICKER MODAL
-    // -------------------------------------------------------------
-    function openPicker() {
-      document.getElementById("pickerModal").classList.remove("hidden");
-      renderStaffOptions(STAFF_MEMBERS);
-    }
-
-    function renderStaffOptions(list) {
-      const container = document.getElementById("staffOptions");
-      container.innerHTML = "";
-      list.forEach(name => {
-        const btn = document.createElement("button");
-        btn.className = "staff-opt";
-        btn.textContent = name;
-        btn.onclick = () => selectStaff(name);
-        container.appendChild(btn);
-      });
-    }
-
-    function filterStaff() {
-      const q = document.getElementById("nameFilter").value.toLowerCase();
-      renderStaffOptions(STAFF_MEMBERS.filter(n => n.toLowerCase().includes(q)));
-    }
-
-    function selectStaff(name) {
-      currentUser = name;
-      localStorage.setItem("chromag_user", name);
-      document.getElementById("activeUser").textContent = name;
-      document.getElementById("pickerModal").classList.add("hidden");
-      renderPeriod();
-      loadUserDataFromSheet();
-    }
-
-    function editScriptUrl() {
-      const val = prompt("Enter your Google Apps Script Web App URL:", SCRIPT_URL);
-      if (val) {
-        SCRIPT_URL = val.trim();
-        localStorage.setItem("chromag_script_url", SCRIPT_URL);
-        alert("Script URL updated!");
-      }
     }
   </script>
 </body>
