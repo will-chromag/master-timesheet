@@ -227,7 +227,7 @@
     }
     .stat-box { text-align: center; }
     .stat-label { font-size: 0.66rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600; }
-    .stat-val { font-family: 'JetBrains Mono', monospace; font-size: 1.15rem; font-weight: 700; color: #fff; margin-top: 1px; }
+    .stat-val { font-family: 'JetBrains Mono', monospace; font-size: 1.05rem; font-weight: 700; color: #fff; margin-top: 1px; }
     .stat-val.highlight { color: var(--accent); }
 
     .week-header {
@@ -272,7 +272,7 @@
     .day-hours-badge {
       font-family: 'JetBrains Mono', monospace;
       font-weight: 700;
-      font-size: 0.95rem;
+      font-size: 0.9rem;
       color: var(--primary);
     }
 
@@ -649,15 +649,15 @@
         <div class="stats-grid">
           <div class="stat-box">
             <div class="stat-label">Week 1</div>
-            <div class="stat-val" id="week1Total">0.0h</div>
+            <div class="stat-val" id="week1Total">0h 0m</div>
           </div>
           <div class="stat-box">
             <div class="stat-label">Week 2</div>
-            <div class="stat-val" id="week2Total">0.0h</div>
+            <div class="stat-val" id="week2Total">0h 0m</div>
           </div>
           <div class="stat-box">
             <div class="stat-label">Period Total</div>
-            <div class="stat-val highlight" id="periodTotal">0.0h</div>
+            <div class="stat-val highlight" id="periodTotal">0h 0m</div>
           </div>
         </div>
       </div>
@@ -744,7 +744,7 @@
     const PRIMARY_URL = "https://script.google.com/macros/s/AKfycbzC4MUbgItHnLffi9Zh_Z1G8hbNGdYOpArgUylPkY5ALFs-NFweKwDUC3bk1lCGyKXH/exec";
 
     let SCRIPT_URL = localStorage.getItem("chromag_script_url") || PRIMARY_URL;
-    let currentAdminPassword = ""; // Kept in memory only during active admin session
+    let currentAdminPassword = "";
 
     let staffRoster = [
       { name: "Claire Buchar", pin: "1234" },
@@ -780,6 +780,19 @@
     let syncTimer = null;
 
     const keyBuffers = {};
+
+    // -------------------------------------------------------------
+    // TIME FORMATTING HELPER
+    // -------------------------------------------------------------
+    function formatHoursMinutes(decimalHours) {
+      if (!decimalHours || isNaN(decimalHours) || decimalHours <= 0) {
+        return "0h 0m";
+      }
+      const totalMins = Math.round(decimalHours * 60);
+      const hours = Math.floor(totalMins / 60);
+      const mins = totalMins % 60;
+      return `${hours}h ${mins}m`;
+    }
 
     // -------------------------------------------------------------
     // INITIALIZATION
@@ -1164,7 +1177,7 @@
               <span class="day-name">${dayDisplay}</span>
               ${isToday ? '<span class="day-today-tag">TODAY</span>' : ''}
             </div>
-            <div class="day-hours-badge" id="badge_${iso}">${saved.totalHours > 0 ? saved.totalHours.toFixed(1) + 'h' : '0.0h'}</div>
+            <div class="day-hours-badge" id="badge_${iso}">${formatHoursMinutes(saved.totalHours)}</div>
           </div>
 
           <div class="quick-clock-row">
@@ -1288,7 +1301,7 @@
       const totalHours = calcDayHours(start, end);
       const badge = document.getElementById(`badge_${iso}`);
       if (badge) {
-        badge.textContent = totalHours > 0 ? totalHours.toFixed(1) + 'h' : '0.0h';
+        badge.textContent = formatHoursMinutes(totalHours);
       }
 
       const entry = {
@@ -1344,9 +1357,9 @@
         else w2 += hrs;
       }
 
-      document.getElementById("week1Total").textContent = w1.toFixed(1) + 'h';
-      document.getElementById("week2Total").textContent = w2.toFixed(1) + 'h';
-      document.getElementById("periodTotal").textContent = (w1 + w2).toFixed(1) + 'h';
+      document.getElementById("week1Total").textContent = formatHoursMinutes(w1);
+      document.getElementById("week2Total").textContent = formatHoursMinutes(w2);
+      document.getElementById("periodTotal").textContent = formatHoursMinutes(w1 + w2);
     }
 
     // -------------------------------------------------------------
