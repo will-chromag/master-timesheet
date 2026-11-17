@@ -300,6 +300,33 @@
       align-items: flex-end;
       width: 100%;
     }
+    .punch-row + .punch-row {
+      margin-top: 8px;
+    }
+    .punch-actions {
+      display: flex;
+      gap: 5px;
+      margin-left: 8px;
+    }
+    .punch-action-btn {
+      width: 38px;
+      height: 38px;
+      flex: 0 0 38px;
+      border: 1px solid var(--card-border);
+      border-radius: 6px;
+      background: #253347;
+      color: #e2e8f0;
+      font-size: 1.15rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .punch-action-btn:hover {
+      background: #2f4059;
+      color: #fff;
+    }
+    .punch-action-btn.remove {
+      color: #fca5a5;
+    }
 
     .input-group label {
       display: block;
@@ -356,9 +383,16 @@
         box-sizing: border-box !important;
       }
       .notes-col {
-        flex: 1 1 100% !important;
-        width: 100% !important;
+        flex: 1 1 0 !important;
+        width: auto !important;
         min-width: 0 !important;
+      }
+      .punch-row {
+        flex-wrap: wrap;
+      }
+      .punch-actions {
+        flex: 0 0 auto;
+        margin-left: 8px;
       }
     }
 
@@ -778,6 +812,8 @@
     let currentUser = localStorage.getItem("chromag_user") || "";
     let selectedUserForPin = null;
     let syncTimer = null;
+    const pendingSyncPayloads = new Map();
+    let syncInProgress = false;
 
     const keyBuffers = {};
 
@@ -1088,11 +1124,13 @@
             }
           });
 
-          if (data.entries && data.entries.length > 0) {
-            data.entries.forEach(entry => {
-              localStorage.setItem(storageKey(entry.dateStr), JSON.stringify(entry));
-            });
-          }
+          const entriesByDate = new Map();
+          (data.entries || []).forEach(entry => {
+            const dayEntries = entriesByDate.get(entry.dateStr) || [];
+            dayEntries.push(entry);
+            entriesByDate.set(entry.dateStr, dayEntries);
+          });
+          entriesByDate.forEach((entries, dateStr) => saveDayEntries(dateStr, normalizePunchEntries(entries, dateStr)));
 
           renderPeriod();
           setSyncStatus(`Synced with sheet ✓`, "normal");
@@ -1163,7 +1201,8 @@
           container.appendChild(createWeekDivider("Week 2 (Days 8–14)"));
         }
 
-        const saved = getStoredDay(iso);
+        const savedEntries = ensurePrimaryEntry(iso);
+        const dayHours = savedEntries.reduce((sum, entry) => sum + (Number(entry.totalHours) || 0), 0);
 
         const card = document.createElement("div");
         card.className = `day-card ${isToday ? 'today' : ''}`;
@@ -1177,7 +1216,7 @@
               <span class="day-name">${dayDisplay}</span>
               ${isToday ? '<span class="day-today-tag">TODAY</span>' : ''}
             </div>
-            <div class="day-hours-badge" id="badge_${iso}">${formatHoursMinutes(saved.totalHours)}</div>
+            <div class="day-hours-badge" id="badge_${iso}">${formatHoursMinutes(dayHours)}</div>
           </div>
 
           <div class="quick-clock-row">
@@ -1186,26 +1225,83 @@
             <button type="button" class="quick-btn" onclick="clearDay('${iso}')">Clear</button>
           </div>
 
-          <div class="day-row-inputs">
-            <div class="input-group time-col">
-              <label>Start</label>
-              <input type="time" id="start_${iso}" value="${saved.startTime || ''}" onkeydown="trackTimeKey(event, '${iso}', 'start')" onblur="handleTimeBlur('${iso}', 'start')" onchange="onDayChange('${iso}')">
-            </div>
-            <div class="input-group time-col">
-              <label>End</label>
-              <input type="time" id="end_${iso}" value="${saved.endTime || ''}" onkeydown="trackTimeKey(event, '${iso}', 'end')" onblur="handleTimeBlur('${iso}', 'end')" onchange="onDayChange('${iso}')">
-            </div>
-            <div class="input-group notes-col">
-              <label>Notes</label>
-              <input type="text" class="notes-input" id="notes_${iso}" placeholder="Tasks or notes..." value="${saved.notes || ''}" oninput="onDayChange('${iso}')">
-            </div>
-          </div>
+          <div id="punchRows_${iso}"></div>
         `;
 
         container.appendChild(card);
+        renderPunchRows(iso, savedEntries);
       }
 
       updateTotals();
+    }
+
+    function renderPunchRows(iso, entries) {
+      const container = document.getElementById(`punchRows_${iso}`);
+      if (!container) return;
+      container.innerHTML = "";
+
+      entries.forEach(entry => {
+        const isAdditional = entry.entryId !== "1";
+        const row = document.createElement("div");
+        row.className = "day-row-inputs punch-row";
+
+        ["start", "end"].forEach(type => {
+          const group = document.createElement("div");
+          group.className = "input-group time-col";
+          const label = document.createElement("label");
+          label.textContent = type === "start" ? "Start" : "End";
+          const input = document.createElement("input");
+          input.type = "time";
+          input.id = `${type}_${iso}_${entry.entryId}`;
+          input.value = entry[type === "start" ? "startTime" : "endTime"] || "";
+          input.addEventListener("keydown", event => trackTimeKey(event, iso, entry.entryId, type));
+          input.addEventListener("blur", () => handleTimeBlur(iso, entry.entryId, type));
+          input.addEventListener("change", () => onDayChange(iso, entry.entryId));
+          group.append(label, input);
+          row.appendChild(group);
+        });
+
+        const notesGroup = document.createElement("div");
+        notesGroup.className = "input-group notes-col";
+        const notesLabel = document.createElement("label");
+        notesLabel.textContent = "Notes";
+        const notesInput = document.createElement("input");
+        notesInput.type = "text";
+        notesInput.className = "notes-input";
+        notesInput.id = `notes_${iso}_${entry.entryId}`;
+        notesInput.placeholder = "Tasks or notes...";
+        notesInput.value = entry.notes || "";
+        notesInput.addEventListener("input", () => onDayChange(iso, entry.entryId));
+        notesGroup.append(notesLabel, notesInput);
+        row.appendChild(notesGroup);
+
+        const actions = document.createElement("div");
+        actions.className = "punch-actions";
+        if (!isAdditional) {
+          const addButton = document.createElement("button");
+          addButton.type = "button";
+          addButton.className = "punch-action-btn";
+          addButton.textContent = "+";
+          addButton.title = "Add another punch for this day";
+          addButton.setAttribute("aria-label", addButton.title);
+          addButton.addEventListener("click", () => addPunch(iso));
+          actions.appendChild(addButton);
+        }
+
+        if (isAdditional) {
+          const removeButton = document.createElement("button");
+          removeButton.type = "button";
+          removeButton.className = "punch-action-btn remove";
+          removeButton.textContent = "×";
+          removeButton.title = "Remove this additional punch";
+          removeButton.setAttribute("aria-label", removeButton.title);
+          removeButton.addEventListener("click", () => removePunch(iso, entry.entryId));
+          actions.appendChild(removeButton);
+        }
+
+        row.appendChild(actions);
+        container.appendChild(row);
+      });
     }
 
     function createWeekDivider(text) {
@@ -1218,8 +1314,8 @@
     // -------------------------------------------------------------
     // KEY TRACKING & TIME RESOLUTION
     // -------------------------------------------------------------
-    function trackTimeKey(e, iso, type) {
-      const keyId = `${iso}_${type}`;
+    function trackTimeKey(e, iso, entryId, type) {
+      const keyId = `${iso}_${entryId}_${type}`;
       if (!keyBuffers[keyId]) keyBuffers[keyId] = [];
 
       if (/^[0-9]$/.test(e.key)) {
@@ -1230,12 +1326,12 @@
       }
     }
 
-    function handleTimeBlur(iso, type) {
-      const input = document.getElementById(`${type}_${iso}`);
+    function handleTimeBlur(iso, entryId, type) {
+      const input = document.getElementById(`${type}_${iso}_${entryId}`);
       if (!input) return;
 
       if (!input.value) {
-        const keyId = `${iso}_${type}`;
+        const keyId = `${iso}_${entryId}_${type}`;
         const buf = keyBuffers[keyId] || [];
 
         if (buf.length >= 3) {
@@ -1257,8 +1353,8 @@
         }
       }
 
-      delete keyBuffers[`${iso}_${type}`];
-      onDayChange(iso);
+      delete keyBuffers[`${iso}_${entryId}_${type}`];
+      onDayChange(iso, entryId);
     }
 
     // -------------------------------------------------------------
@@ -1284,39 +1380,100 @@
     }
 
     function getStoredDay(iso) {
-      if (!currentUser) return {};
+      if (!currentUser) return [];
       const raw = localStorage.getItem(storageKey(iso));
-      return raw ? JSON.parse(raw) : {};
+      if (!raw) return [];
+
+      const saved = JSON.parse(raw);
+      return normalizePunchEntries(Array.isArray(saved) ? saved : [saved], iso);
     }
 
-    function onDayChange(iso) {
-      const startEl = document.getElementById(`start_${iso}`);
-      const endEl = document.getElementById(`end_${iso}`);
-      const notesEl = document.getElementById(`notes_${iso}`);
+    function normalizePunchEntries(savedEntries, iso) {
+      const entries = savedEntries.filter(entry => entry && typeof entry === "object")
+        .map(entry => ({ ...entry, dateStr: iso }));
+      const usedIds = new Set();
+      entries.forEach(entry => {
+        const entryId = String(entry.entryId || "").trim();
+        if (entryId === "main" && !usedIds.has("1")) {
+          entry.entryId = "1";
+        } else if (/^[1-9]\d*$/.test(entryId) && !usedIds.has(entryId)) {
+          entry.entryId = entryId;
+        } else {
+          entry.entryId = "";
+        }
+        if (entry.entryId) usedIds.add(entry.entryId);
+      });
+
+      let nextId = 1;
+      entries.forEach(entry => {
+        if (!entry.entryId) {
+          while (usedIds.has(String(nextId))) nextId += 1;
+          entry.entryId = String(nextId);
+          usedIds.add(entry.entryId);
+          nextId += 1;
+        }
+      });
+
+      return entries.sort((a, b) => Number(a.entryId) - Number(b.entryId));
+    }
+
+    function nextPunchId(entries) {
+      return String(entries.reduce((maxId, entry) => Math.max(maxId, Number(entry.entryId) || 0), 0) + 1);
+    }
+
+    function ensurePrimaryEntry(iso) {
+      const entries = getStoredDay(iso);
+      if (!entries.some(entry => entry.entryId === "1")) {
+        entries.unshift({
+          entryId: "1",
+          dateStr: iso,
+          startTime: "",
+          endTime: "",
+          totalHours: 0,
+          notes: ""
+        });
+      }
+      return entries.sort((a, b) => Number(a.entryId) - Number(b.entryId));
+    }
+
+    function saveDayEntries(iso, entries) {
+      if (currentUser) {
+        localStorage.setItem(storageKey(iso), JSON.stringify(entries));
+      }
+    }
+
+    function onDayChange(iso, entryId) {
+      const startEl = document.getElementById(`start_${iso}_${entryId}`);
+      const endEl = document.getElementById(`end_${iso}_${entryId}`);
+      const notesEl = document.getElementById(`notes_${iso}_${entryId}`);
 
       const start = startEl ? startEl.value : "";
       const end = endEl ? endEl.value : "";
       const notes = notesEl ? notesEl.value : "";
 
       const totalHours = calcDayHours(start, end);
-      const badge = document.getElementById(`badge_${iso}`);
-      if (badge) {
-        badge.textContent = formatHoursMinutes(totalHours);
+      const entries = ensurePrimaryEntry(iso);
+      let entry = entries.find(saved => saved.entryId === entryId);
+      if (!entry) {
+        entry = { entryId, dateStr: iso };
+        entries.push(entry);
       }
-
-      const entry = {
+      Object.assign(entry, {
         dateStr: iso,
         startTime: start,
         endTime: end,
         breakMinutes: 0,
-        totalHours: totalHours,
-        notes: notes
-      };
+        totalHours,
+        notes
+      });
 
-      if (currentUser) {
-        localStorage.setItem(storageKey(iso), JSON.stringify(entry));
+      const badge = document.getElementById(`badge_${iso}`);
+      if (badge) {
+        const dayHours = entries.reduce((sum, saved) => sum + (Number(saved.totalHours) || 0), 0);
+        badge.textContent = formatHoursMinutes(dayHours);
       }
 
+      saveDayEntries(iso, entries);
       updateTotals();
       triggerAutoSync(entry);
     }
@@ -1325,21 +1482,52 @@
       const now = new Date();
       const timeStr = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
       
-      const el = document.getElementById(`${type}_${iso}`);
+      const el = document.getElementById(`${type}_${iso}_1`);
       if (el) el.value = timeStr;
-      onDayChange(iso);
+      onDayChange(iso, "1");
+    }
+
+    function addPunch(iso) {
+      const entries = ensurePrimaryEntry(iso);
+      const entry = {
+        entryId: nextPunchId(entries),
+        dateStr: iso,
+        startTime: "",
+        endTime: "",
+        totalHours: 0,
+        notes: ""
+      };
+      entries.push(entry);
+      saveDayEntries(iso, entries);
+      renderPunchRows(iso, entries);
+      updateTotals();
+      triggerAutoSync(entry);
     }
 
     function clearDay(iso) {
-      const s = document.getElementById(`start_${iso}`);
-      const e = document.getElementById(`end_${iso}`);
-      const n = document.getElementById(`notes_${iso}`);
-      if (s) s.value = '';
-      if (e) e.value = '';
-      if (n) n.value = '';
-      delete keyBuffers[`${iso}_start`];
-      delete keyBuffers[`${iso}_end`];
-      onDayChange(iso);
+      const entries = ensurePrimaryEntry(iso);
+      entries.forEach(entry => {
+        const start = document.getElementById(`start_${iso}_${entry.entryId}`);
+        const end = document.getElementById(`end_${iso}_${entry.entryId}`);
+        const notes = document.getElementById(`notes_${iso}_${entry.entryId}`);
+        if (start) start.value = "";
+        if (end) end.value = "";
+        if (notes) notes.value = "";
+        delete keyBuffers[`${iso}_${entry.entryId}_start`];
+        delete keyBuffers[`${iso}_${entry.entryId}_end`];
+        onDayChange(iso, entry.entryId);
+      });
+    }
+
+    function removePunch(iso, entryId) {
+      if (entryId === "1") return;
+      const entries = ensurePrimaryEntry(iso);
+      if (!entries.some(entry => entry.entryId === entryId)) return;
+      const remaining = entries.filter(entry => entry.entryId !== entryId);
+      saveDayEntries(iso, remaining);
+      renderPunchRows(iso, remaining);
+      updateTotals();
+      triggerAutoSync({ action: "deleteEntry", dateStr: iso, entryId });
     }
 
     function updateTotals() {
@@ -1350,8 +1538,7 @@
         const curDate = new Date(start);
         curDate.setDate(curDate.getDate() + i);
         const iso = toISODate(curDate);
-        const saved = getStoredDay(iso);
-        const hrs = Number(saved.totalHours) || 0;
+        const hrs = getStoredDay(iso).reduce((sum, entry) => sum + (Number(entry.totalHours) || 0), 0);
         
         if (i < 7) w1 += hrs;
         else w2 += hrs;
@@ -1373,27 +1560,45 @@
       }
 
       setSyncStatus("Syncing to sheet...", "saving");
+      const payload = { staffName: currentUser, ...entry };
+      const syncKey = `${payload.dateStr}_${payload.entryId || "main"}`;
+      pendingSyncPayloads.set(syncKey, payload);
       clearTimeout(syncTimer);
 
-      syncTimer = setTimeout(async () => {
-        try {
-          const payload = {
-            staffName: currentUser,
-            ...entry
-          };
+      syncTimer = setTimeout(flushPendingSync, 600);
+    }
 
-          await fetch(SCRIPT_URL, {
-            method: "POST",
-            mode: "no-cors",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload)
-          });
+    async function flushPendingSync() {
+      if (syncInProgress || pendingSyncPayloads.size === 0) return;
+      syncInProgress = true;
+      let failed = false;
 
-          setSyncStatus(`Synced to ${currentUser}'s tab ✓`, "normal");
-        } catch (e) {
-          setSyncStatus("Sync failed. Check connection.", "error");
+      try {
+        while (pendingSyncPayloads.size > 0) {
+          const [syncKey, payload] = pendingSyncPayloads.entries().next().value;
+          pendingSyncPayloads.delete(syncKey);
+          try {
+            await fetch(SCRIPT_URL, {
+              method: "POST",
+              mode: "no-cors",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload)
+            });
+          } catch (error) {
+            pendingSyncPayloads.set(syncKey, payload);
+            throw error;
+          }
         }
-      }, 600);
+        setSyncStatus(`Synced to ${currentUser}'s tab ✓`, "normal");
+      } catch (error) {
+        failed = true;
+        setSyncStatus("Sync failed. Check connection.", "error");
+      } finally {
+        syncInProgress = false;
+        if (!failed && pendingSyncPayloads.size > 0) {
+          syncTimer = setTimeout(flushPendingSync, 0);
+        }
+      }
     }
 
     function setSyncStatus(msg, state) {

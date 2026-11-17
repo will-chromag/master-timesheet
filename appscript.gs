@@ -54,13 +54,14 @@ function doGet(e) {
         .setMimeType(ContentService.MimeType.JSON);
     }
 
+    ensureEntryIds(sheet);
     const lastRow = sheet.getLastRow();
     if (lastRow <= 1) {
       return ContentService.createTextOutput(JSON.stringify({ status: "success", entries: [] }))
         .setMimeType(ContentService.MimeType.JSON);
     }
 
-    const data = sheet.getRange(2, 2, lastRow - 1, 5).getValues();
+    const data = sheet.getRange(2, 2, lastRow - 1, 6).getValues();
     const timeZone = Session.getScriptTimeZone() || "GMT";
     const entries = [];
 
@@ -92,7 +93,8 @@ function doGet(e) {
           startTime: formatTimeValue(data[i][1]),
           endTime: formatTimeValue(data[i][2]),
           totalHours: Number(data[i][3]) || 0,
-          notes: String(data[i][4] || "")
+          notes: String(data[i][4] || ""),
+          entryId: String(data[i][5] || "").trim() || "1"
         });
       }
     }
@@ -165,28 +167,74 @@ function doPost(e) {
     }
 
     // 3. Shift Logging
-    const staffName = (data.staffName || "Unknown").trim();
-    const targetDate = String(data.dateStr).trim();
+    const staffName = String(data.staffName || "").trim();
+    const targetDate = String(data.dateStr || "").trim();
+    const entryId = data.entryId === undefined || data.entryId === null || data.entryId === ""
+      ? "1"
+      : String(data.entryId).trim();
+
+    if (!staffName || !targetDate || !/^[1-9]\d*$/.test(entryId) || !Number.isSafeInteger(Number(entryId))) {
+      return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "Invalid staff name, date, or entry ID" }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    if (data.action === "deleteEntry") {
+      if (entryId === "1") {
+        return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "The main entry cannot be removed" }))
+          .setMimeType(ContentService.MimeType.JSON);
+      }
+
+      const sheet = ss.getSheetByName(staffName);
+      if (!sheet) {
+        return ContentService.createTextOutput(JSON.stringify({ status: "not_found" }))
+          .setMimeType(ContentService.MimeType.JSON);
+      }
+      ensureEntryIds(sheet);
+
+      const lastRow = sheet.getLastRow();
+      if (lastRow > 1) {
+        const rows = sheet.getRange(2, 2, lastRow - 1, 6).getValues();
+        const timeZone = Session.getScriptTimeZone() || "GMT";
+        for (let i = 0; i < rows.length; i++) {
+          const dateValue = rows[i][0];
+          const rowDate = dateValue instanceof Date
+            ? Utilities.formatDate(dateValue, timeZone, "yyyy-MM-dd")
+            : String(dateValue).replace(/^'/, "").trim();
+          const rowEntryId = String(rows[i][5] || "").trim() || "1";
+          if (rowDate === targetDate && rowEntryId === entryId) {
+            sheet.deleteRow(i + 2);
+            SpreadsheetApp.flush();
+            return ContentService.createTextOutput(JSON.stringify({ status: "success", deleted: true }))
+              .setMimeType(ContentService.MimeType.JSON);
+          }
+        }
+      }
+
+      return ContentService.createTextOutput(JSON.stringify({ status: "not_found" }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
 
     let sheet = ensureStaffTab(ss, staffName);
+    ensureEntryIds(sheet);
     registerStaffInSummary(ss, staffName);
 
     const lastRow = sheet.getLastRow();
     let rowIndex = -1;
 
     if (lastRow > 1) {
-      const dateValues = sheet.getRange(1, 2, lastRow, 1).getValues();
-      for (let i = 1; i < dateValues.length; i++) {
-        let val = dateValues[i][0];
+      const existingRows = sheet.getRange(2, 2, lastRow - 1, 6).getValues();
+      for (let i = 0; i < existingRows.length; i++) {
+        let val = existingRows[i][0];
         let valStr = "";
         if (val instanceof Date) {
           valStr = Utilities.formatDate(val, Session.getScriptTimeZone() || "GMT", "yyyy-MM-dd");
         } else {
           valStr = String(val).replace(/^'/, "").trim();
         }
+        const existingEntryId = String(existingRows[i][5] || "").trim() || "1";
 
-        if (valStr === targetDate) {
-          rowIndex = i + 1;
+        if (valStr === targetDate && existingEntryId === entryId) {
+          rowIndex = i + 2;
           break;
         }
       }
@@ -198,15 +246,16 @@ function doPost(e) {
       data.startTime || "",
       data.endTime || "",
       data.totalHours !== undefined ? data.totalHours : 0,
-      data.notes || ""
+      data.notes || "",
+      Number(entryId)
     ];
 
     if (rowIndex > 0) {
-      sheet.getRange(rowIndex, 1, 1, 6).setValues([rowValues]);
+      sheet.getRange(rowIndex, 1, 1, 7).setValues([rowValues]);
     } else {
       const targetRow = lastRow + 1;
       sheet.getRange(targetRow, 2).setNumberFormat("@");
-      sheet.getRange(targetRow, 1, 1, 6).setValues([rowValues]);
+      sheet.getRange(targetRow, 1, 1, 7).setValues([rowValues]);
     }
 
     SpreadsheetApp.flush();
@@ -229,7 +278,59 @@ function ensureStaffTab(ss, staffName) {
     sheet.getRange(1, 1, 1, 6).setFontWeight("bold");
     sheet.getRange("B:B").setNumberFormat("@");
   }
+  ensureEntryIds(sheet);
   return sheet;
+}
+
+function ensureEntryIds(sheet) {
+  if (!sheet.getRange(1, 7).getValue()) {
+    sheet.getRange(1, 7).setValue("Entry ID").setFontWeight("bold");
+  }
+
+  const lastRow = sheet.getLastRow();
+  if (lastRow <= 1) return;
+
+  const rows = sheet.getRange(2, 2, lastRow - 1, 6).getValues();
+  const timeZone = Session.getScriptTimeZone() || "GMT";
+  const entriesByDate = new Map();
+  const outputIds = rows.map(row => [row[5]]);
+
+  rows.forEach((row, index) => {
+    const dateValue = row[0];
+    if (!dateValue) return;
+    const dateStr = dateValue instanceof Date
+      ? Utilities.formatDate(dateValue, timeZone, "yyyy-MM-dd")
+      : String(dateValue).replace(/^'/, "").trim();
+    if (!dateStr) return;
+    const entries = entriesByDate.get(dateStr) || [];
+    entries.push({ index, existingId: String(row[5] || "").trim() });
+    entriesByDate.set(dateStr, entries);
+  });
+
+  entriesByDate.forEach(entries => {
+    const usedIds = new Set();
+    const pending = [];
+
+    entries.forEach(entry => {
+      const currentId = entry.existingId;
+      if (/^[1-9]\d*$/.test(currentId) && Number.isSafeInteger(Number(currentId)) && !usedIds.has(Number(currentId))) {
+        usedIds.add(Number(currentId));
+        outputIds[entry.index][0] = Number(currentId);
+      } else {
+        pending.push(entry);
+      }
+    });
+
+    pending.sort((a, b) => (a.existingId === "main" ? -1 : 0) - (b.existingId === "main" ? -1 : 0));
+    pending.forEach(entry => {
+      let nextId = 1;
+      while (usedIds.has(nextId)) nextId += 1;
+      usedIds.add(nextId);
+      outputIds[entry.index][0] = nextId;
+    });
+  });
+
+  sheet.getRange(2, 7, outputIds.length, 1).setValues(outputIds);
 }
 
 function registerStaffInSummary(ss, staffName) {
