@@ -10,6 +10,8 @@ and **×** removes only additional punches. IDs are saved with the rows so a
 different browser can load and update the same punches without duplicating
 them. Each punch row has its own **In**, **Out**, and **Clear** controls.
 Punch hours are included in day and pay-period totals.
+On mobile, the controls appear above the time fields, with Notes and the
+add/remove button on the row below.
 
 The Payroll Summary **30 Day Avg** column groups punches by day over the latest
 30 calendar days and averages only days with at least five total hours.

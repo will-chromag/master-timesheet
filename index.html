@@ -291,6 +291,25 @@
       gap: 5px;
       margin-left: 8px;
     }
+    .punch-notes-row {
+      display: flex;
+      align-items: flex-end;
+      flex: 1 1 auto;
+      min-width: 0;
+      width: 100%;
+    }
+    .punch-row-action {
+      flex: 0 0 auto;
+      margin-left: 8px;
+    }
+    @media (min-width: 601px) {
+      .punch-notes-row {
+        display: contents;
+      }
+      .notes-col { order: 3; }
+      .punch-actions { order: 4; }
+      .punch-row-action { order: 5; }
+    }
     .punch-quick-btn {
       height: 38px;
       padding: 0 8px;
@@ -301,6 +320,9 @@
       font-size: 0.7rem;
       font-weight: 600;
       cursor: pointer;
+    }
+    .punch-quick-btn .mobile-label {
+      display: none;
     }
     .punch-quick-btn:hover {
       background: #2f4059;
@@ -363,34 +385,57 @@
       width: 100%;
     }
 
-    /* Mobile: Start & End on Row 1 with 12px gap, Notes on Row 2 */
+    /* Mobile: controls first, then time fields, then notes */
     @media (max-width: 600px) {
       .day-row-inputs {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px !important;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-areas:
+          "quick quick"
+          "start end"
+          "notes notes";
+        gap: 8px;
+        align-items: end;
+      }
+      .punch-row + .punch-row {
+        border-top: 1px solid rgba(148, 163, 184, 0.18);
+        margin-top: 12px;
+        padding-top: 12px;
       }
       .time-col {
-        flex: 1 1 calc(50% - 4px) !important;
-        max-width: calc(50% - 4px) !important;
+        flex: initial !important;
+        max-width: none !important;
         min-width: 0 !important;
       }
+      .start-col { grid-area: start; }
+      .end-col { grid-area: end; }
       .time-col input[type="time"] {
         width: 100% !important;
         min-width: 0 !important;
         box-sizing: border-box !important;
       }
+      .punch-notes-row {
+        grid-area: notes;
+      }
       .notes-col {
-        flex: 1 1 0 !important;
-        width: auto !important;
+        flex: 1 1 auto;
+        width: auto;
         min-width: 0 !important;
       }
-      .punch-row {
-        flex-wrap: wrap;
-      }
       .punch-actions {
-        flex: 0 0 auto;
-        margin-left: 8px;
+        grid-area: quick;
+        display: flex;
+        width: 100%;
+        margin-left: 0;
+      }
+      .punch-quick-btn {
+        flex: 1 1 0;
+        min-width: 0;
+      }
+      .punch-quick-btn .desktop-label { display: none; }
+      .punch-quick-btn .mobile-label { display: inline; }
+      .punch-row-action {
+        margin-left: auto;
       }
     }
 
@@ -407,6 +452,9 @@
       .notes-col {
         flex: 1 1 auto;
         min-width: 0;
+      }
+      .punch-row-action {
+        margin-left: auto;
       }
     }
 
@@ -1236,10 +1284,12 @@
         const isAdditional = entry.entryId !== "1";
         const row = document.createElement("div");
         row.className = "day-row-inputs punch-row";
+        const quickActions = document.createElement("div");
+        quickActions.className = "punch-actions";
 
         ["start", "end"].forEach(type => {
           const group = document.createElement("div");
-          group.className = "input-group time-col";
+          group.className = `input-group time-col ${type}-col`;
           const label = document.createElement("label");
           label.textContent = type === "start" ? "Start" : "End";
           const input = document.createElement("input");
@@ -1265,48 +1315,48 @@
         notesInput.value = entry.notes || "";
         notesInput.addEventListener("input", () => onDayChange(iso, entry.entryId));
         notesGroup.append(notesLabel, notesInput);
-        row.appendChild(notesGroup);
+        const notesRow = document.createElement("div");
+        notesRow.className = "punch-notes-row";
+        notesRow.appendChild(notesGroup);
 
-        const actions = document.createElement("div");
-        actions.className = "punch-actions";
+        const rowAction = document.createElement("div");
+        rowAction.className = "punch-row-action";
+        const addOrRemoveButton = document.createElement("button");
+        addOrRemoveButton.type = "button";
+        addOrRemoveButton.className = `punch-action-btn${isAdditional ? " remove" : ""}`;
+        addOrRemoveButton.textContent = isAdditional ? "×" : "+";
+        addOrRemoveButton.title = isAdditional ? "Remove this additional punch" : "Add another punch for this day";
+        addOrRemoveButton.setAttribute("aria-label", addOrRemoveButton.title);
+        addOrRemoveButton.addEventListener("click", () => {
+          if (isAdditional) removePunch(iso, entry.entryId);
+          else addPunch(iso);
+        });
+        rowAction.appendChild(addOrRemoveButton);
+        notesRow.appendChild(rowAction);
+
         [
-          { label: "In", title: "Clock in now", action: () => quickClock(iso, entry.entryId, "start") },
-          { label: "Out", title: "Clock out now", action: () => quickClock(iso, entry.entryId, "end") },
+          { label: "In", mobileLabel: "Clock in", title: "Clock in now", action: () => quickClock(iso, entry.entryId, "start") },
+          { label: "Out", mobileLabel: "Clock out", title: "Clock out now", action: () => quickClock(iso, entry.entryId, "end") },
           { label: "Clear", title: "Clear this punch", action: () => clearPunch(iso, entry.entryId) }
         ].forEach(control => {
           const button = document.createElement("button");
           button.type = "button";
           button.className = "punch-quick-btn";
-          button.textContent = control.label;
+          const desktopLabel = document.createElement("span");
+          desktopLabel.className = "desktop-label";
+          desktopLabel.textContent = control.label;
+          const mobileLabel = document.createElement("span");
+          mobileLabel.className = "mobile-label";
+          mobileLabel.textContent = control.mobileLabel || control.label;
+          button.append(desktopLabel, mobileLabel);
           button.title = control.title;
           button.setAttribute("aria-label", control.title);
           button.addEventListener("click", control.action);
-          actions.appendChild(button);
+          quickActions.appendChild(button);
         });
 
-        if (!isAdditional) {
-          const addButton = document.createElement("button");
-          addButton.type = "button";
-          addButton.className = "punch-action-btn";
-          addButton.textContent = "+";
-          addButton.title = "Add another punch for this day";
-          addButton.setAttribute("aria-label", addButton.title);
-          addButton.addEventListener("click", () => addPunch(iso));
-          actions.appendChild(addButton);
-        }
-
-        if (isAdditional) {
-          const removeButton = document.createElement("button");
-          removeButton.type = "button";
-          removeButton.className = "punch-action-btn remove";
-          removeButton.textContent = "×";
-          removeButton.title = "Remove this additional punch";
-          removeButton.setAttribute("aria-label", removeButton.title);
-          removeButton.addEventListener("click", () => removePunch(iso, entry.entryId));
-          actions.appendChild(removeButton);
-        }
-
-        row.appendChild(actions);
+        row.appendChild(notesRow);
+        row.appendChild(quickActions);
         container.appendChild(row);
       });
     }
