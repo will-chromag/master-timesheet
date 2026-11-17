@@ -15,6 +15,10 @@ add/remove button on the row below.
 
 The Payroll Summary **30 Day Avg** column groups punches by day over the latest
 30 calendar days and averages only days with at least five total hours.
+The selected pay period dates remain visible in B2:B3. Use the Summary Range
+selector and Custom Start/End date pickers in D1:E3 to switch payroll hours and
+notes between the selected period and a custom range. The 30 Day Avg remains a
+rolling 30-day calculation.
 
 Time inputs remain native picker fields. When entering times by keyboard, try
 `9` for 09:00, `4p` for 16:00, `930a` for 09:30, `9:30p` for 21:30, or `16:30`.

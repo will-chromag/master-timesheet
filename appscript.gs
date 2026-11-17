@@ -29,6 +29,8 @@ function doGet(e) {
       }
 
       ensurePayrollAverageColumn(ss);
+      ensurePayrollRangeControls(ss);
+      ensurePayrollSummaryFormulas(ss);
 
       const lastRow = staffSheet.getLastRow();
       const staffList = [];
@@ -354,6 +356,7 @@ function registerStaffInSummary(ss, staffName) {
   const searchLimit = totalRowIndex > 0 ? totalRowIndex - 1 : dataA.length;
   for (let r = 5; r < searchLimit; r++) {
     if (String(dataA[r][0]).trim().toLowerCase() === staffName.toLowerCase()) {
+      setPayrollRangeFormulas(summarySheet, r + 1);
       setAverageFormula(summarySheet, r + 1);
       return;
     }
@@ -365,12 +368,7 @@ function registerStaffInSummary(ss, staffName) {
   }
 
   summarySheet.getRange(insertAtRow, 1).setValue(staffName);
-
-  const hoursFormula = `=IFERROR(SUM(FILTER(INDIRECT("'" & A${insertAtRow} & "'!E2:E"), INDIRECT("'" & A${insertAtRow} & "'!B2:B") >= TEXT($B$2, "yyyy-mm-dd"), INDIRECT("'" & A${insertAtRow} & "'!B2:B") <= TEXT($B$3, "yyyy-mm-dd"))), 0)`;
-  summarySheet.getRange(insertAtRow, 2).setFormula(hoursFormula);
-
-  const notesFormula = `=IFERROR(TEXTJOIN(" // ", TRUE, FILTER(INDIRECT("'" & A${insertAtRow} & "'!F2:F"), INDIRECT("'" & A${insertAtRow} & "'!B2:B") >= TEXT($B$2, "yyyy-mm-dd"), INDIRECT("'" & A${insertAtRow} & "'!B2:B") <= TEXT($B$3, "yyyy-mm-dd"), INDIRECT("'" & A${insertAtRow} & "'!F2:F") <> "")), "")`;
-  summarySheet.getRange(insertAtRow, 3).setFormula(notesFormula);
+  setPayrollRangeFormulas(summarySheet, insertAtRow);
   setAverageFormula(summarySheet, insertAtRow);
 
   SpreadsheetApp.flush();
@@ -393,6 +391,68 @@ function ensurePayrollAverageColumn(ss) {
       setAverageFormula(summarySheet, row);
     }
   }
+}
+
+function ensurePayrollRangeControls(ss) {
+  const summarySheet = ss.getSheetByName("Payroll Summary");
+  if (!summarySheet) return;
+
+  summarySheet.getRange("D1:D3").setValues([
+    ["Summary Range"],
+    ["Custom Start"],
+    ["Custom End"]
+  ]);
+
+  const rangeRule = SpreadsheetApp.newDataValidation()
+    .requireValueInList(["Selected Period", "Custom Dates"], true)
+    .setAllowInvalid(false)
+    .setHelpText("Choose the selected pay period or enter a custom date range.")
+    .build();
+  const rangeCell = summarySheet.getRange("E1");
+  rangeCell.setDataValidation(rangeRule);
+  if (!rangeCell.getValue()) rangeCell.setValue("Selected Period");
+
+  const dateRule = SpreadsheetApp.newDataValidation()
+    .requireDate()
+    .setAllowInvalid(false)
+    .setHelpText("Choose a custom start or end date.")
+    .build();
+
+  summarySheet.getRange("E2:E3")
+    .setDataValidation(dateRule)
+    .setNumberFormat("dd-mmm-yyyy");
+}
+
+function ensurePayrollSummaryFormulas(ss) {
+  const summarySheet = ss.getSheetByName("Payroll Summary");
+  if (!summarySheet) return;
+
+  const dataA = summarySheet.getRange("A:A").getValues();
+  let totalRowIndex = dataA.findIndex(row => {
+    const value = String(row[0]).trim().toLowerCase();
+    return value.includes("total payroll") || value === "total";
+  });
+  totalRowIndex = totalRowIndex >= 0 ? totalRowIndex + 1 : summarySheet.getLastRow() + 1;
+
+  for (let row = 6; row < totalRowIndex; row++) {
+    if (String(dataA[row - 1]?.[0] || "").trim()) {
+      setPayrollRangeFormulas(summarySheet, row);
+    }
+  }
+}
+
+function setPayrollRangeFormulas(summarySheet, row) {
+  const dateRange = `INDIRECT("'" & A${row} & "'!B2:B")`;
+  const hoursRange = `INDIRECT("'" & A${row} & "'!E2:E")`;
+  const notesRange = `INDIRECT("'" & A${row} & "'!F2:F")`;
+  const startDate = `TEXT(IF($E$1="Custom Dates",$E$2,$B$2),"yyyy-mm-dd")`;
+  const endDate = `TEXT(IF($E$1="Custom Dates",$E$3,$B$3),"yyyy-mm-dd")`;
+
+  const hoursFormula = `=IFERROR(SUM(FILTER(${hoursRange}, ${dateRange} >= ${startDate}, ${dateRange} <= ${endDate})), 0)`;
+  summarySheet.getRange(row, 2).setFormula(hoursFormula);
+
+  const notesFormula = `=IFERROR(TEXTJOIN(" // ", TRUE, FILTER(${notesRange}, ${dateRange} >= ${startDate}, ${dateRange} <= ${endDate}, ${notesRange} <> "")), "")`;
+  summarySheet.getRange(row, 3).setFormula(notesFormula);
 }
 
 function ensureAverageHeader(summarySheet) {
