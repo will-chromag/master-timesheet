@@ -1247,8 +1247,8 @@
           input.id = `${type}_${iso}_${entry.entryId}`;
           input.value = entry[type === "start" ? "startTime" : "endTime"] || "";
           input.addEventListener("keydown", event => trackTimeKey(event, iso, entry.entryId, type));
-          input.addEventListener("blur", () => handleTimeBlur(iso, entry.entryId, type));
           input.addEventListener("change", () => onDayChange(iso, entry.entryId));
+          input.addEventListener("blur", () => handleTimeBlur(iso, entry.entryId, type));
           group.append(label, input);
           row.appendChild(group);
         });
@@ -1322,14 +1322,47 @@
     // KEY TRACKING & TIME RESOLUTION
     // -------------------------------------------------------------
     function trackTimeKey(e, iso, entryId, type) {
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
       const keyId = `${iso}_${entryId}_${type}`;
-      if (!keyBuffers[keyId]) keyBuffers[keyId] = [];
+      const input = document.getElementById(`${type}_${iso}_${entryId}`);
 
-      if (/^[0-9]$/.test(e.key)) {
-        keyBuffers[keyId].push(e.key);
-        if (keyBuffers[keyId].length > 4) keyBuffers[keyId].shift();
+      if (e.key === "Tab" && input?.dataset.tabAfterShortcut === "true") {
+        const dayInputs = Array.from(document.querySelectorAll(
+          '#daysList input[type="time"], #daysList input[type="text"], #daysList button:not(:disabled)'
+        ));
+        const currentIndex = dayInputs.indexOf(input);
+        const nextIndex = currentIndex + (e.shiftKey ? -1 : 1);
+        delete input.dataset.tabAfterShortcut;
+        if (dayInputs[nextIndex]) {
+          e.preventDefault();
+          dayInputs[nextIndex].focus();
+          return;
+        }
+      }
+
+      if (e.key !== "Tab" && input?.dataset.tabAfterShortcut) {
+        delete input.dataset.tabAfterShortcut;
+      }
+
+      if (!keyBuffers[keyId]) keyBuffers[keyId] = "";
+
+      if (/^[0-9ap:]$/i.test(e.key)) {
+        keyBuffers[keyId] += e.key.toLowerCase();
+        if (keyBuffers[keyId].length > 8) keyBuffers[keyId] = keyBuffers[keyId].slice(-8);
+        if (/^[ap]$/i.test(e.key)) {
+          e.preventDefault();
+          const typedTime = keyBuffers[keyId].length > 1
+            ? normalizeTimeKeyBuffer(keyBuffers[keyId])
+            : convertTimeMeridiem(input?.value, e.key);
+          if (input && typedTime) {
+            input.value = typedTime;
+            input.dataset.tabAfterShortcut = "true";
+            delete keyBuffers[keyId];
+            onDayChange(iso, entryId);
+          }
+        }
       } else if (e.key === "Backspace") {
-        keyBuffers[keyId].pop();
+        keyBuffers[keyId] = keyBuffers[keyId].slice(0, -1);
       }
     }
 
@@ -1337,31 +1370,62 @@
       const input = document.getElementById(`${type}_${iso}_${entryId}`);
       if (!input) return;
 
-      if (!input.value) {
-        const keyId = `${iso}_${entryId}_${type}`;
-        const buf = keyBuffers[keyId] || [];
+      const keyId = `${iso}_${entryId}_${type}`;
+      const typedTime = normalizeTimeKeyBuffer(keyBuffers[keyId]);
+      if (typedTime) {
+        input.value = typedTime;
+      }
 
-        if (buf.length >= 3) {
-          let h = 0, m = 0;
-          if (buf.length === 3) {
-            h = parseInt(buf[0], 10);
-            m = parseInt(buf.slice(1).join(""), 10);
-          } else if (buf.length === 4) {
-            h = parseInt(buf.slice(0, 2).join(""), 10);
-            m = parseInt(buf.slice(2).join(""), 10);
-          }
+      delete keyBuffers[keyId];
+      onDayChange(iso, entryId);
+    }
 
-          if (m < 60) {
-            if (h <= 12) {
-              const formatted = String(h).padStart(2, "0") + ":" + String(m).padStart(2, "0");
-              input.value = formatted;
-            }
-          }
+    function convertTimeMeridiem(value, meridiem) {
+      const match = String(value || "").match(/^(\d{2}):(\d{2})$/);
+      if (!match) return "";
+
+      let hours = Number(match[1]);
+      const minutes = Number(match[2]);
+      if (hours > 23 || minutes > 59) return "";
+
+      hours = meridiem.toLowerCase() === "p"
+        ? (hours % 12) + 12
+        : hours % 12;
+      return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
+    }
+
+    function normalizeTimeKeyBuffer(value) {
+      const input = String(value || "").trim().toLowerCase();
+      if (!input) return "";
+
+      const match = input.match(/^(\d{1,2})(?::?(\d{2}))?\s*(a|am|p|pm)?$/);
+      if (match) {
+        let hours = Number(match[1]);
+        const minutes = Number(match[2] || 0);
+        const meridiem = match[3] ? match[3][0] : "";
+        if (minutes > 59) return "";
+
+        if (meridiem) {
+          if (hours < 1 || hours > 12) return "";
+          if (meridiem === "p" && hours < 12) hours += 12;
+          if (meridiem === "a" && hours === 12) hours = 0;
+        } else if (hours > 23) {
+          return "";
+        }
+
+        return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
+      }
+
+      if (/^\d{3,4}$/.test(input)) {
+        const hourDigits = input.length === 3 ? 1 : 2;
+        const hours = Number(input.slice(0, hourDigits));
+        const minutes = Number(input.slice(hourDigits));
+        if (hours <= 23 && minutes <= 59) {
+          return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
         }
       }
 
-      delete keyBuffers[`${iso}_${entryId}_${type}`];
-      onDayChange(iso, entryId);
+      return "";
     }
 
     // -------------------------------------------------------------

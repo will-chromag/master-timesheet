@@ -401,7 +401,7 @@ function ensureAverageHeader(summarySheet) {
     SpreadsheetApp.CopyPasteType.PASTE_FORMAT,
     false
   );
-  summarySheet.getRange(5, 4).setValue("Average");
+  summarySheet.getRange(5, 4).setValue("30 Day Avg");
 }
 
 function setAverageFormula(summarySheet, row) {
