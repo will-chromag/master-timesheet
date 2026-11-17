@@ -15,10 +15,17 @@ add/remove button on the row below.
 
 The Payroll Summary **30 Day Avg** column groups punches by day over the latest
 30 calendar days and averages only days with at least five total hours.
-The selected pay period dates remain visible in B2:B3. Use the Summary Range
-selector and Custom Start/End date pickers in D1:E3 to switch payroll hours and
-notes between the selected period and a custom range. The 30 Day Avg remains a
-rolling 30-day calculation.
+Choose a preset pay period, **Year to Date**, or **Custom Range** from the
+selector in B1. Year to Date covers January 1 through today. For a custom
+range, enter the start and end dates in B2 and B3; the purple heading and
+payroll totals update to match. The selected range is shown in the purple
+merged heading above the summary table.
+
+The **All Payroll** tab lists each staff punch for its selected period, followed
+by a yellow per-staff hours subtotal and a grand total. Its period dropdown and
+custom date pickers work like Payroll Summary. The last column shows when each
+entry was last updated. Custom date inputs are labeled in A2:A3; the grand
+total row uses blue fill and white text.
 
 Time inputs remain native picker fields. When entering times by keyboard, try
 `9` for 09:00, `4p` for 16:00, `930a` for 09:30, `9:30p` for 21:30, or `16:30`.

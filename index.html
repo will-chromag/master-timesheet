@@ -91,10 +91,10 @@
       padding: 6px 12px;
       border-radius: 20px;
       cursor: pointer;
-      min-width: 0;
-      max-width: 150px;
+      flex: 0 0 auto;
+      max-width: 260px;
     }
-    .user-pill span {
+    .user-pill .full-name {
       font-size: 0.85rem;
       font-weight: 600;
       color: var(--text);
@@ -102,6 +102,7 @@
       overflow: hidden;
       text-overflow: ellipsis;
     }
+    .user-pill .user-initials { display: none; }
     .user-pill svg { width: 14px; height: 14px; stroke: var(--text-muted); flex-shrink: 0; }
 
     .today-btn {
@@ -387,6 +388,17 @@
 
     /* Mobile: controls first, then time fields, then notes */
     @media (max-width: 600px) {
+      .user-pill {
+        max-width: none;
+        padding: 6px 9px;
+      }
+      .user-pill .full-name { display: none; }
+      .user-pill .user-initials {
+        display: inline;
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: var(--text);
+      }
       .day-row-inputs {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -688,11 +700,12 @@
         <div class="brand-badge">Hours</div>
       </div>
       <div class="header-actions">
-        <div class="user-pill" onclick="openPicker()">
+        <div class="user-pill" onclick="openPicker()" aria-label="Select user" title="Select user">
           <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
           </svg>
-          <span id="activeUser">Select Name</span>
+          <span class="full-name" id="activeUser">Select Name</span>
+          <span class="user-initials" id="activeUserInitials" aria-hidden="true">SN</span>
         </div>
         <button type="button" class="today-btn" onclick="goToToday()" title="Jump to today">Today</button>
         <button class="settings-btn" onclick="openSettingsPrompt()" title="Settings">
@@ -886,7 +899,7 @@
       if (!currentUser) {
         openPicker();
       } else {
-        document.getElementById("activeUser").textContent = currentUser;
+        updateActiveUser(currentUser);
         loadUserDataFromSheet();
       }
 
@@ -986,7 +999,7 @@
       if (enteredPin === expectedPin) {
         currentUser = selectedUserForPin.name;
         localStorage.setItem("chromag_user", currentUser);
-        document.getElementById("activeUser").textContent = currentUser;
+        updateActiveUser(currentUser);
         document.getElementById("pinModal").classList.add("hidden");
         selectedUserForPin = null;
 
@@ -996,6 +1009,21 @@
         document.getElementById("pinErrorMsg").textContent = "Incorrect PIN. Try again.";
         document.getElementById("userPinInput").value = "";
       }
+    }
+
+    function updateActiveUser(name) {
+      const initials = name
+        .trim()
+        .split(/\s+/)
+        .filter(Boolean)
+        .map(part => [...part][0])
+        .join("")
+        .toUpperCase();
+      document.getElementById("activeUser").textContent = name;
+      document.getElementById("activeUserInitials").textContent = initials || "?";
+      const pill = document.querySelector(".user-pill");
+      pill.title = name ? `Change user (${name})` : "Select user";
+      pill.setAttribute("aria-label", name ? `Change user. Current user: ${name}` : "Select user");
     }
 
     document.getElementById("userPinInput").addEventListener("keyup", (e) => {
