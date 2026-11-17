@@ -28,6 +28,8 @@ function doGet(e) {
         staffSheet.getRange(2, 1, rows.length, 2).setValues(rows);
       }
 
+      ensurePayrollAverageColumn(ss);
+
       const lastRow = staffSheet.getLastRow();
       const staffList = [];
       if (lastRow > 1) {
@@ -336,6 +338,7 @@ function ensureEntryIds(sheet) {
 function registerStaffInSummary(ss, staffName) {
   const summarySheet = ss.getSheetByName("Payroll Summary");
   if (!summarySheet) return;
+  ensureAverageHeader(summarySheet);
 
   const dataA = summarySheet.getRange("A:A").getValues();
   let totalRowIndex = -1;
@@ -351,6 +354,7 @@ function registerStaffInSummary(ss, staffName) {
   const searchLimit = totalRowIndex > 0 ? totalRowIndex - 1 : dataA.length;
   for (let r = 5; r < searchLimit; r++) {
     if (String(dataA[r][0]).trim().toLowerCase() === staffName.toLowerCase()) {
+      setAverageFormula(summarySheet, r + 1);
       return;
     }
   }
@@ -367,6 +371,43 @@ function registerStaffInSummary(ss, staffName) {
 
   const notesFormula = `=IFERROR(TEXTJOIN(" // ", TRUE, FILTER(INDIRECT("'" & A${insertAtRow} & "'!F2:F"), INDIRECT("'" & A${insertAtRow} & "'!B2:B") >= TEXT($B$2, "yyyy-mm-dd"), INDIRECT("'" & A${insertAtRow} & "'!B2:B") <= TEXT($B$3, "yyyy-mm-dd"), INDIRECT("'" & A${insertAtRow} & "'!F2:F") <> "")), "")`;
   summarySheet.getRange(insertAtRow, 3).setFormula(notesFormula);
+  setAverageFormula(summarySheet, insertAtRow);
 
   SpreadsheetApp.flush();
+}
+
+function ensurePayrollAverageColumn(ss) {
+  const summarySheet = ss.getSheetByName("Payroll Summary");
+  if (!summarySheet) return;
+
+  ensureAverageHeader(summarySheet);
+  const dataA = summarySheet.getRange("A:A").getValues();
+  let totalRowIndex = dataA.findIndex(row => {
+    const value = String(row[0]).trim().toLowerCase();
+    return value.includes("total payroll") || value === "total";
+  });
+  totalRowIndex = totalRowIndex >= 0 ? totalRowIndex + 1 : summarySheet.getLastRow() + 1;
+
+  for (let row = 6; row < totalRowIndex; row++) {
+    if (String(dataA[row - 1]?.[0] || "").trim()) {
+      setAverageFormula(summarySheet, row);
+    }
+  }
+}
+
+function ensureAverageHeader(summarySheet) {
+  summarySheet.getRange(5, 3).copyTo(
+    summarySheet.getRange(5, 4),
+    SpreadsheetApp.CopyPasteType.PASTE_FORMAT,
+    false
+  );
+  summarySheet.getRange(5, 4).setValue("Average");
+}
+
+function setAverageFormula(summarySheet, row) {
+  const dateRange = `INDIRECT("'" & A${row} & "'!B2:B")`;
+  const hoursRange = `INDIRECT("'" & A${row} & "'!E2:E")`;
+  const dailyHours = `QUERY({${dateRange},${hoursRange}}, "select Col1, sum(Col2) where Col1 >= '" & TEXT(TODAY()-29, "yyyy-mm-dd") & "' and Col1 <= '" & TEXT(TODAY(), "yyyy-mm-dd") & "' and Col1 is not null group by Col1 label sum(Col2) ''", 0)`;
+  const formula = `=IFERROR(AVERAGE(QUERY(${dailyHours}, "select Col2 where Col2 >= 5", 0)), "")`;
+  summarySheet.getRange(row, 4).setFormula(formula).setNumberFormat("0.00");
 }
