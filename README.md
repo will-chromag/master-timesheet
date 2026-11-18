@@ -1,6 +1,6 @@
-# Master Timesheet
+# Chronalog
 
-Chromag hours tracking web app backed by Google Sheets and Google Apps Script.
+Chronalog is a Chromag hours-tracking web app backed by Google Sheets and Google Apps Script.
 
 ## Multiple punches per day
 
