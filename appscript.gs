@@ -123,6 +123,38 @@ function doPost(e) {
     const data = JSON.parse(e.postData.contents);
     const validAdminPassword = getStoredAdminPassword();
 
+    // Verify employee PINs against the current Staff sheet, never a browser copy.
+    if (data.action === "verifyStaffPin") {
+      const staffName = String(data.staffName || "").trim();
+      const pin = String(data.pin || "").trim();
+      const staffSheet = ss.getSheetByName("Staff");
+
+      if (!staffName || !/^\d{4}$/.test(pin)) {
+        return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "Incorrect name or PIN" }))
+          .setMimeType(ContentService.MimeType.JSON);
+      }
+
+      if (!staffSheet) {
+        return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "Staff roster is unavailable" }))
+          .setMimeType(ContentService.MimeType.JSON);
+      }
+
+      const lastRow = staffSheet.getLastRow();
+      const rows = lastRow > 1 ? staffSheet.getRange(2, 1, lastRow - 1, 2).getValues() : [];
+      const matches = rows.filter(row => String(row[0] || "").trim() === staffName);
+      const storedPin = matches.length === 1
+        ? String(matches[0][1] || "").replace(/^'/, "").trim()
+        : "";
+
+      if (storedPin && storedPin === pin) {
+        return ContentService.createTextOutput(JSON.stringify({ status: "success" }))
+          .setMimeType(ContentService.MimeType.JSON);
+      }
+
+      return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "Incorrect name or PIN" }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
     // 1. Verify Admin Password Endpoint
     if (data.action === "verifyAdminPassword") {
       if (String(data.password || "").trim() === validAdminPassword) {

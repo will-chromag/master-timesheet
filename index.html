@@ -800,8 +800,8 @@
         <div id="pinErrorMsg" style="color: var(--danger); font-size: 0.8rem; height: 18px;"></div>
       </div>
       <div class="modal-actions" style="justify-content: center;">
-        <button class="btn-secondary" onclick="closePinModal()">Cancel</button>
-        <button class="btn-primary" onclick="submitUserPin()">Unlock</button>
+        <button class="btn-secondary" id="cancelPinBtn" onclick="closePinModal()">Cancel</button>
+        <button class="btn-primary" id="unlockPinBtn" onclick="submitUserPin()">Unlock</button>
       </div>
     </div>
   </div>
@@ -1013,13 +1013,44 @@
       if (!currentUser) openPicker();
     }
 
-    function submitUserPin() {
+    async function submitUserPin() {
       if (!selectedUserForPin) return;
       const enteredPin = document.getElementById("userPinInput").value.trim();
-      const expectedPin = String(selectedUserForPin.pin || "1234").trim();
+      const unlockButton = document.getElementById("unlockPinBtn");
+      const cancelButton = document.getElementById("cancelPinBtn");
+      const errorMessage = document.getElementById("pinErrorMsg");
+      const selectedMember = selectedUserForPin;
 
-      if (enteredPin === expectedPin) {
-        currentUser = selectedUserForPin.name;
+      if (!/^\d{4}$/.test(enteredPin)) {
+        errorMessage.textContent = "Enter your 4-digit PIN.";
+        return;
+      }
+
+      unlockButton.disabled = true;
+      cancelButton.disabled = true;
+      errorMessage.textContent = "";
+
+      try {
+        const res = await fetch(SCRIPT_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({
+            action: "verifyStaffPin",
+            staffName: selectedMember.name,
+            pin: enteredPin
+          })
+        });
+        const result = await res.json();
+
+        if (result.status !== "success") {
+          errorMessage.textContent = result.message === "Incorrect name or PIN"
+            ? "Incorrect PIN. Try again."
+            : "Could not verify PIN with Google Sheets.";
+          document.getElementById("userPinInput").value = "";
+          return;
+        }
+
+        currentUser = selectedMember.name;
         localStorage.setItem("chromag_user", currentUser);
         updateActiveUser(currentUser);
         document.getElementById("pinModal").classList.add("hidden");
@@ -1027,9 +1058,12 @@
 
         renderPeriod();
         loadUserDataFromSheet();
-      } else {
-        document.getElementById("pinErrorMsg").textContent = "Incorrect PIN. Try again.";
+      } catch (err) {
+        errorMessage.textContent = "Could not verify PIN with Google Sheets. Check your connection and try again.";
         document.getElementById("userPinInput").value = "";
+      } finally {
+        unlockButton.disabled = false;
+        cancelButton.disabled = false;
       }
     }
 

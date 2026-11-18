@@ -36,3 +36,7 @@ Apps Script web app as well as serving the updated `index.html`. The script adds
 an `Entry ID` column to employee tabs automatically when they are next read or
 written, and populates the Payroll Summary average formulas when the roster is
 loaded.
+
+Employee PINs are verified by the Apps Script against the current `Staff` sheet
+on each PIN prompt. The app does not accept a cached or built-in PIN when the
+sheet cannot be reached; deploy both the script and app updates for this behavior.
