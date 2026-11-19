@@ -679,6 +679,20 @@
       font-size: 0.88rem;
       cursor: pointer;
     }
+    .btn-primary.is-loading { cursor: wait; }
+    .auth-spinner {
+      display: none;
+      width: 0.85em;
+      height: 0.85em;
+      margin-right: 6px;
+      border: 2px solid currentColor;
+      border-right-color: transparent;
+      border-radius: 50%;
+      vertical-align: -0.12em;
+      animation: auth-spin 0.7s linear infinite;
+    }
+    .btn-primary.is-loading .auth-spinner { display: inline-block; }
+    @keyframes auth-spin { to { transform: rotate(360deg); } }
     .btn-secondary {
       background: #334155;
       color: #fff;
@@ -802,7 +816,7 @@
       </div>
       <div class="modal-actions" style="justify-content: center;">
         <button class="btn-secondary" id="cancelPinBtn" onclick="closePinModal()">Cancel</button>
-        <button class="btn-primary" id="unlockPinBtn" onclick="submitUserPin()">Unlock</button>
+        <button class="btn-primary" id="unlockPinBtn" onclick="submitUserPin()"><span class="auth-spinner" aria-hidden="true"></span><span id="unlockPinBtnLabel">Unlock</span></button>
       </div>
     </div>
   </div>
@@ -818,7 +832,7 @@
       </div>
       <div class="modal-actions" style="justify-content: center;">
         <button type="button" class="btn-secondary" onclick="closeAdminPasswordModal()">Cancel</button>
-        <button type="button" class="btn-primary" id="verifyAdminPasswordBtn" onclick="verifyAdminPassword()">Continue</button>
+        <button type="button" class="btn-primary" id="verifyAdminPasswordBtn" onclick="verifyAdminPassword()"><span class="auth-spinner" aria-hidden="true"></span><span id="verifyAdminPasswordBtnLabel">Continue</span></button>
       </div>
     </div>
   </div>
@@ -848,7 +862,7 @@
 
       <div class="modal-actions">
         <button class="btn-secondary" onclick="closeSettingsModal()">Cancel</button>
-        <button class="btn-primary" id="saveSettingsBtn" onclick="saveAdminSettings()">Save to Sheet</button>
+        <button class="btn-primary" id="saveSettingsBtn" onclick="saveAdminSettings()"><span class="auth-spinner" aria-hidden="true"></span><span id="saveSettingsBtnLabel">Save to Sheet</span></button>
       </div>
     </div>
   </div>
@@ -1017,10 +1031,12 @@
     async function submitUserPin() {
       if (!selectedUserForPin) return;
       const enteredPin = document.getElementById("userPinInput").value.trim();
+      const pinInput = document.getElementById("userPinInput");
       const unlockButton = document.getElementById("unlockPinBtn");
       const cancelButton = document.getElementById("cancelPinBtn");
       const errorMessage = document.getElementById("pinErrorMsg");
       const selectedMember = selectedUserForPin;
+      if (unlockButton.disabled) return;
 
       if (!/^\d{4}$/.test(enteredPin)) {
         errorMessage.textContent = "Enter your 4-digit PIN.";
@@ -1028,6 +1044,10 @@
       }
 
       unlockButton.disabled = true;
+      unlockButton.classList.add("is-loading");
+      unlockButton.setAttribute("aria-busy", "true");
+      document.getElementById("unlockPinBtnLabel").textContent = "Checking PIN...";
+      pinInput.disabled = true;
       cancelButton.disabled = true;
       errorMessage.textContent = "";
 
@@ -1064,6 +1084,10 @@
         document.getElementById("userPinInput").value = "";
       } finally {
         unlockButton.disabled = false;
+        unlockButton.classList.remove("is-loading");
+        unlockButton.removeAttribute("aria-busy");
+        document.getElementById("unlockPinBtnLabel").textContent = "Unlock";
+        pinInput.disabled = false;
         cancelButton.disabled = false;
       }
     }
@@ -1109,6 +1133,7 @@
       const passwordInput = document.getElementById("adminPasswordInput");
       const verifyButton = document.getElementById("verifyAdminPasswordBtn");
       const errorMessage = document.getElementById("adminPasswordError");
+      if (verifyButton.disabled) return;
       const pwd = passwordInput.value;
       if (!pwd) {
         errorMessage.textContent = "Enter the admin password to continue.";
@@ -1117,6 +1142,10 @@
       }
 
       verifyButton.disabled = true;
+      verifyButton.classList.add("is-loading");
+      verifyButton.setAttribute("aria-busy", "true");
+      document.getElementById("verifyAdminPasswordBtnLabel").textContent = "Checking password...";
+      passwordInput.disabled = true;
       errorMessage.textContent = "";
       setSyncStatus("Verifying admin password...", "saving");
 
@@ -1144,6 +1173,10 @@
         errorMessage.textContent = "Could not reach backend to verify password.";
       } finally {
         verifyButton.disabled = false;
+        verifyButton.classList.remove("is-loading");
+        verifyButton.removeAttribute("aria-busy");
+        document.getElementById("verifyAdminPasswordBtnLabel").textContent = "Continue";
+        passwordInput.disabled = false;
       }
     }
 
@@ -1218,8 +1251,11 @@
 
     async function saveAdminSettings() {
       const saveBtn = document.getElementById("saveSettingsBtn");
-      saveBtn.textContent = "Saving...";
+      if (saveBtn.disabled) return;
       saveBtn.disabled = true;
+      saveBtn.classList.add("is-loading");
+      saveBtn.setAttribute("aria-busy", "true");
+      document.getElementById("saveSettingsBtnLabel").textContent = "Saving to sheet...";
 
       const newUrl = document.getElementById("settingsScriptUrl").value.trim();
       if (newUrl) {
@@ -1255,8 +1291,10 @@
         alert("Saved locally (could not reach sheet immediately).");
         closeSettingsModal();
       } finally {
-        saveBtn.textContent = "Save to Sheet";
         saveBtn.disabled = false;
+        saveBtn.classList.remove("is-loading");
+        saveBtn.removeAttribute("aria-busy");
+        document.getElementById("saveSettingsBtnLabel").textContent = "Save to Sheet";
       }
     }
 
