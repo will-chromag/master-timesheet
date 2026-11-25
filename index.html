@@ -258,7 +258,7 @@
     .day-top {
       display: flex;
       justify-content: space-between;
-      align-items: baseline;
+      align-items: center;
       margin-bottom: 10px;
     }
     .day-name { font-weight: 700; font-size: 0.95rem; }
@@ -272,10 +272,30 @@
       margin-left: 6px;
     }
     .day-hours-badge {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      flex: 0 0 6.25rem;
+      width: 6.25rem;
+      height: 1.25rem;
+      white-space: nowrap;
       font-family: 'JetBrains Mono', monospace;
       font-weight: 700;
       font-size: 0.9rem;
       color: var(--primary);
+    }
+    .day-hours-badge.is-running {
+      gap: 5px;
+      color: #34d399;
+    }
+    .day-hours-badge.is-running::before {
+      content: "";
+      width: 6px;
+      height: 6px;
+      flex: 0 0 6px;
+      border-radius: 50%;
+      background: currentColor;
+      animation: pulse 1.5s infinite;
     }
 
     /* Inputs Layout */
@@ -941,6 +961,8 @@
       }
 
       renderPeriod();
+      updateRunningTimers();
+      setInterval(updateRunningTimers, 1000);
     });
 
     function calculateCurrentPeriodOffset() {
@@ -1444,7 +1466,7 @@
           input.type = "time";
           input.id = `${type}_${iso}_${entry.entryId}`;
           input.value = entry[type === "start" ? "startTime" : "endTime"] || "";
-          input.addEventListener("keydown", event => trackTimeKey(event, iso, entry.entryId, type));
+          input.addEventListener("keydown", event => trackTimeKey(event, iso, entry.entryId, type), true);
           input.addEventListener("change", () => onDayChange(iso, entry.entryId));
           input.addEventListener("blur", () => handleTimeBlur(iso, entry.entryId, type));
           group.append(label, input);
@@ -1507,6 +1529,7 @@
         row.appendChild(quickActions);
         container.appendChild(row);
       });
+      updateRunningTimers();
     }
 
     function createWeekDivider(text) {
@@ -1552,10 +1575,10 @@
           const typedTime = keyBuffers[keyId].length > 1
             ? normalizeTimeKeyBuffer(keyBuffers[keyId])
             : convertTimeMeridiem(input?.value, e.key);
+          delete keyBuffers[keyId];
           if (input && typedTime) {
             input.value = typedTime;
             input.dataset.tabAfterShortcut = "true";
-            delete keyBuffers[keyId];
             onDayChange(iso, entryId);
           }
         }
@@ -1596,10 +1619,21 @@
       const input = String(value || "").trim().toLowerCase();
       if (!input) return "";
 
-      const match = input.match(/^(\d{1,2})(?::?(\d{2}))?\s*(a|am|p|pm)?$/);
+      const match = input.match(/^(\d{1,4})(?::?(\d{2}))?\s*(a|am|p|pm)?$/);
       if (match) {
-        let hours = Number(match[1]);
-        const minutes = Number(match[2] || 0);
+        let hours;
+        let minutes;
+        if (match[2] !== undefined) {
+          hours = Number(match[1]);
+          minutes = Number(match[2]);
+        } else if (match[1].length >= 3) {
+          const hourDigits = match[1].length === 3 ? 1 : 2;
+          hours = Number(match[1].slice(0, hourDigits));
+          minutes = Number(match[1].slice(hourDigits));
+        } else {
+          hours = Number(match[1]);
+          minutes = 0;
+        }
         const meridiem = match[3] ? match[3][0] : "";
         if (minutes > 59) return "";
 
@@ -1612,15 +1646,6 @@
         }
 
         return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
-      }
-
-      if (/^\d{3,4}$/.test(input)) {
-        const hourDigits = input.length === 3 ? 1 : 2;
-        const hours = Number(input.slice(0, hourDigits));
-        const minutes = Number(input.slice(hourDigits));
-        if (hours <= 23 && minutes <= 59) {
-          return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
-        }
       }
 
       return "";
@@ -1711,7 +1736,7 @@
       }
     }
 
-    function onDayChange(iso, entryId) {
+    function onDayChange(iso, entryId, clockOutAt) {
       const startEl = document.getElementById(`start_${iso}_${entryId}`);
       const endEl = document.getElementById(`end_${iso}_${entryId}`);
       const notesEl = document.getElementById(`notes_${iso}_${entryId}`);
@@ -1720,7 +1745,28 @@
       const end = endEl ? endEl.value : "";
       const notes = notesEl ? notesEl.value : "";
 
-      const totalHours = calcDayHours(start, end);
+      let totalHours = calcDayHours(start, end);
+      const timerKey = timerStartStorageKey(iso, entryId);
+      const savedTimerStart = localStorage.getItem(timerKey);
+      const [savedStartTime, savedStartTimestamp, savedEndTime, savedEndTimestamp] = (savedTimerStart || "").split("|");
+      const startedAt = Number(savedStartTimestamp);
+      const hasMatchingTimerStart = savedStartTime === start && Number.isFinite(startedAt);
+      if (start && hasMatchingTimerStart) {
+        if (end) {
+          const previousEndTimestamp = Number(savedEndTimestamp);
+          if (Number.isFinite(clockOutAt)) {
+            totalHours = calcElapsedHours(startedAt, clockOutAt);
+            localStorage.setItem(timerKey, `${start}|${startedAt}|${end}|${clockOutAt}`);
+          } else if (savedEndTime === end && Number.isFinite(previousEndTimestamp)) {
+            totalHours = calcElapsedHours(startedAt, previousEndTimestamp);
+          } else {
+            localStorage.removeItem(timerKey);
+          }
+        } else if (savedEndTime) {
+          localStorage.setItem(timerKey, `${start}|${startedAt}`);
+        }
+      }
+
       const entries = ensurePrimaryEntry(iso);
       let entry = entries.find(saved => saved.entryId === entryId);
       if (!entry) {
@@ -1736,6 +1782,10 @@
         notes
       });
 
+      if (!start || (savedTimerStart && !hasMatchingTimerStart)) {
+        localStorage.removeItem(timerKey);
+      }
+
       const badge = document.getElementById(`badge_${iso}`);
       if (badge) {
         const dayHours = entries.reduce((sum, saved) => sum + (Number(saved.totalHours) || 0), 0);
@@ -1745,6 +1795,7 @@
       saveDayEntries(iso, entries);
       updateTotals();
       triggerAutoSync(entry);
+      updateRunningTimers();
     }
 
     function quickClock(iso, entryId, type) {
@@ -1752,8 +1803,59 @@
       const timeStr = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
       
       const el = document.getElementById(`${type}_${iso}_${entryId}`);
-      if (el) el.value = timeStr;
-      onDayChange(iso, entryId);
+      if (el) {
+        el.value = timeStr;
+        const timerKey = timerStartStorageKey(iso, entryId);
+        if (type === "start") {
+          localStorage.setItem(timerKey, `${timeStr}|${now.getTime()}`);
+        }
+      }
+      onDayChange(iso, entryId, type === "end" ? now.getTime() : undefined);
+    }
+
+    function timerStartStorageKey(iso, entryId) {
+      return `timer_start_${currentUser}_${iso}_${entryId}`;
+    }
+
+    function calcElapsedHours(startedAt, endedAt) {
+      const elapsedMinutes = Math.round(Math.max(0, endedAt - startedAt) / 60000);
+      return Math.round((elapsedMinutes / 60) * 100) / 100;
+    }
+
+    function updateRunningTimers() {
+      document.querySelectorAll(".day-hours-badge").forEach(badge => {
+        const iso = badge.id.slice("badge_".length);
+        const entries = getStoredDay(iso);
+        const activeEntry = entries.slice().reverse().find(entry => {
+          if (!entry.startTime || entry.endTime) return false;
+          const storedStart = localStorage.getItem(timerStartStorageKey(iso, entry.entryId));
+          const [storedTime, storedTimestamp] = (storedStart || "").split("|");
+          return storedTime === entry.startTime && Boolean(storedTimestamp) && Number.isFinite(Number(storedTimestamp));
+        });
+        if (!activeEntry) {
+          const totalHours = entries.reduce((sum, entry) => sum + (Number(entry.totalHours) || 0), 0);
+          badge.textContent = formatHoursMinutes(totalHours);
+          badge.classList.remove("is-running");
+          badge.removeAttribute("aria-label");
+          return;
+        }
+
+        const storedStart = localStorage.getItem(timerStartStorageKey(iso, activeEntry.entryId));
+        const [, storedTimestamp] = (storedStart || "").split("|");
+        const startedAt = Number(storedTimestamp);
+        if (!Number.isFinite(startedAt)) {
+          badge.classList.remove("is-running");
+          return;
+        }
+
+        const elapsedSeconds = Math.max(0, Math.floor((Date.now() - startedAt) / 1000));
+        const hours = String(Math.floor(elapsedSeconds / 3600)).padStart(2, "0");
+        const minutes = String(Math.floor((elapsedSeconds % 3600) / 60)).padStart(2, "0");
+        const seconds = String(elapsedSeconds % 60).padStart(2, "0");
+        badge.textContent = `${hours}:${minutes}:${seconds}`;
+        badge.classList.add("is-running");
+        badge.setAttribute("aria-label", `Time worked ${hours} hours, ${minutes} minutes, ${seconds} seconds`);
+      });
     }
 
     function addPunch(iso) {
@@ -1789,6 +1891,7 @@
       if (entryId === "1") return;
       const entries = ensurePrimaryEntry(iso);
       if (!entries.some(entry => entry.entryId === entryId)) return;
+      localStorage.removeItem(timerStartStorageKey(iso, entryId));
       const remaining = entries.filter(entry => entry.entryId !== entryId);
       saveDayEntries(iso, remaining);
       renderPunchRows(iso, remaining);
