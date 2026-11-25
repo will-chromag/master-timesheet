@@ -609,7 +609,7 @@ function refreshAllPayroll(ss) {
       output.push([
         entry.notes,
         staffName,
-        entry.date,
+        Utilities.formatDate(entry.date, timeZone, "dd/MM/yyyy"),
         entry.startTime,
         entry.endTime,
         entry.hours / 24,
@@ -641,7 +641,7 @@ function refreshAllPayroll(ss) {
   }
   if (output.length) {
     allPayrollSheet.getRange(6, 1, output.length, 8).setValues(output);
-    allPayrollSheet.getRange(6, 3, output.length, 1).setNumberFormat("dd/mm/yyyy");
+    allPayrollSheet.getRange(6, 3, output.length, 1).setNumberFormat("@");
     allPayrollSheet.getRange(6, 4, output.length, 2).setNumberFormat("hh:mm:ss AM/PM");
     allPayrollSheet.getRange(6, 6, output.length, 1).setNumberFormat("[hh]:mm:ss");
     allPayrollSheet.getRange(6, 7, output.length, 1).setNumberFormat("0.00");
